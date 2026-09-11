@@ -8,9 +8,11 @@ import {
   insertSession,
   listFeatures,
   listSessions,
+  loadProviderConfig,
   newSessionMeta,
   openAposDb,
   resolveAppPaths,
+  saveProviderConfig,
   setProvidersJson,
   type PermissionMode,
   type ProviderConfig,
@@ -97,10 +99,31 @@ ipcMain.handle("apos:set-mode", async (_e, m: PermissionMode) => {
 });
 
 ipcMain.handle("apos:save-providers", async (_e, configs: ProviderConfig[]) => {
-  setProvidersJson(db, JSON.stringify(configs ?? []));
+  const list = configs ?? [];
+  setProvidersJson(db, JSON.stringify(list));
+  const secret =
+    process.env.APOS_CREDENTIALS_SECRET ??
+    String(getSettingSafe("credentials_secret") ?? "apos-local");
+  try {
+    saveProviderConfig(paths.credentialsPath, list, secret);
+  } catch (err) {
+    log("save credentials.enc failed", err);
+  }
   if (runner) runner.setProviders(loadProviders());
+  log("providers saved", list.map((p) => p.id).join(","));
   return { ok: true };
 });
+
+function getSettingSafe(key: string): string | undefined {
+  try {
+    const row = db
+      .prepare(`SELECT value FROM app_settings WHERE key = ?`)
+      .get(key) as { value: string } | undefined;
+    return row?.value;
+  } catch {
+    return undefined;
+  }
+}
 
 ipcMain.handle("apos:new-session", async () => {
   const meta = newSessionMeta(`会话 ${new Date().toLocaleString("zh-CN")}`, mode);
