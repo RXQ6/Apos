@@ -8,5 +8,7 @@ release/
 .env.local
 ~/.apos/
 apps/electron/dist/
+apps/electron/dist-types/
 packages/shared/dist/
 *.tsbuildinfo
+.apos-test/
