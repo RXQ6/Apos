@@ -1,0 +1,23 @@
+{
+  "name": "apos",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Apos（景枢）— 电商场景规划智能工作台",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "verify": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1",
+    "typecheck": "tsc -b",
+    "dev": "npm run dev -w @apos/electron",
+    "build:shared": "npm run build -w @apos/shared"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

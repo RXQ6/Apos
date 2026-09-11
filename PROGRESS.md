@@ -6,26 +6,32 @@
 
 | 项 | 验收 | 证据 |
 |---|---|---|
-| 仓库骨架 + Harness + 技术选型冻结 | verify / tech-stack | 既有 |
-| 3 条业务阻塞拍板（扣减时机/优惠优先级/退货门槛）+ 超卖策略 | DECISIONS 表 | 2026-09-11 |
-| 用户旅程总图 | `docs/journey/user-journey.md` | L3 剧本可走读 |
-| cart 模块 + P0 缺口场景卡（注册/搜索/详情/charge/cancel/get/sign/return_refund 等） | feature 数上升 | verify |
-| P0 契约草案 API/表/事件 | `docs/contracts/p0-contracts.md` | 与场景映射 |
+| 仓库骨架 + Harness + 技术选型 + 业务拍板 + 契约/旅程 | verify PASS | 既有 |
+| 项目命名 **Apos（景枢）** | README | 场景规划智能工作台 |
+| ① 文档基线 commit | git | `5cc6055` |
+| ② Bun/Node monorepo + Electron 空壳 | esbuild 产出 main/preload | `apps/electron/dist` |
+| ③ Agent runner + echo/工具 + 流式事件面 | smoke | `@apos/shared` AposAgentRunner |
+| ④ SQLite schema + JSONL 双写 API | smoke | `node:sqlite` + sessions |
+| ⑤ 真工具 feature_list_read / verify_run / progress_update | smoke | explore 挡写工具 |
+| ⑥ 权限三档 explore/ask/allow-all | runner + UI | 接线完成 |
+| 共享层 typecheck / verify | tsc -b + verify.ps1 | 通过 |
 
 ## 进行中
 
 | 项 | 当前状态 | 阻塞 |
 |---|---|---|
-| （无） | — | — |
+| Pi LLM 真会话（替换 echo 循环） | 依赖已装 `@earendil-works/*`，未接 transport | 需 Provider Key |
+| 推送 GitHub | remote 已配 | 网络连接 github.com 失败 |
 
 ## 下一步
 
-1. 代码脚手架（Bun monorepo + electron 空壳）— **需用户点头才写业务/工程代码**
-2. `order.create` L3 走读后标 `passing`（当前 active）
-3. 可选：commit
+1. 配置 LLM Key，用 Pi Agent SDK 替换 echo runner  
+2. 本机 `npm run dev` 打开 Electron 做 UI 走查  
+3. 网络恢复后 `git push -u origin feat/ecommerce-scenario-routing`  
+4. ⑦ MCP / 电商业务实现（明确后置）
 
 ## 当前分支
 
 - 分支：`feat/ecommerce-scenario-routing`
 - 工作区：`D:\apos`
-- 校验：Bypass `scripts/verify.ps1`
+- remote：`https://github.com/RXQ6/Apos.git`

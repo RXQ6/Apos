@@ -1,25 +1,25 @@
-# 电商场景规划仓库（Agent Harness）
+# Apos（景枢）
 
-面向 Agent 与业务同学的**场景 / 模块 / 方法**文档路由库，带 Harness 纪律。
+电商**场景规划智能工作台**：用 Pi Agent 按 `features/`/`modules/` 严谨路由，调度场景、跑验证、推进可落地的业务闭环。
 
-## 快速接班
+## 首次运行
 
-1. 读 `AGENTS.md`（工作规则 + 路由）  
-2. 读 `PROGRESS.md` / `DECISIONS.md`  
-3. 打开 `docs/harness/feature-list.md` 取任务（WIP=1）  
-4. 跑 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1`
+```bash
+npm install
+npm run verify          # 文档 L1
+npm run typecheck       # TS（需先 build shared）
+npm run build:shared
+npm run dev             # Electron + Vite
+```
+
+配置根：`~/.apos/`（`data.db` + `sessions/` JSONL 双写）。
 
 ## 目录
 
 ```text
-AGENTS.md WIP/路由/下班清单
-PROGRESS.md 进度  DECISIONS.md 决策  QUALITY.md 质量
-features/  场景卡（行为 + verify + status）
-modules/   MODULE.md + ROUTING.md + methods/
-docs/harness/  INIT / VERIFY / feature-list
-docs/schemas/  feature.schema.json
-docs/compose/spec/  功能规格
-scripts/verify.ps1  结构校验
+apps/electron     main / preload / renderer
+packages/shared   agent runner、tools、db、types
+features/ modules/ docs/   文档权威域
 ```
 
-实现代码不在本仓库范围内；完成定义见 `docs/harness/VERIFY.md`。
+文档入口：`AGENTS.md`。

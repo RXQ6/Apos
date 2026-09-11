@@ -19,3 +19,6 @@
 | 2026-09-11 | 优惠冲突默认：**活动价 > 会员价 > 券**；一单默认一张券；不可叠加则 `pricing.resolve_conflict` 可解释拒绝 | 拍板解除 promo_conflict 阻塞 |
 | 2026-09-11 | 退货退款：**必须仓收货成功后才 payment.refund + inventory 回补**；仅退款不入库 | 拍板解除 return_refund 阻塞；与 fulfillment 收货事件对称 |
 | 2026-09-11 | 超卖防护默认：预占原子扣减（DB 事务/行锁）；不引入分布式锁服务 | 拍板 oversell_guard 实现边界 |
+| 2026-09-11 | 产品名 **Apos（景枢）**；remote `RXQ6/Apos` | 用户要求易记名 + 指定仓库 |
+| 2026-09-11 | 首期 runner 用 echo+工具事件面，Pi SDK 仅作依赖预留 | 无 Key 也可验证 UI/工具/权限 |
+| 2026-09-11 | 本机无 Bun 时用 Node 24 `node:sqlite`；接口对齐后续 bun:sqlite | 环境限制，不改契约 |
