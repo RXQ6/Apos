@@ -1,33 +1,37 @@
 /**
  * SQLite access via Node built-in `node:sqlite` (Node ≥ 22.5).
- * When running under Bun, swap the driver to `bun:sqlite` with the same API surface.
  */
 import { DatabaseSync } from "node:sqlite";
-import { mkdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export type AposDb = DatabaseSync;
 
-export function openAposDb(dataDbPath: string): AposDb {
-  mkdirSync(dirname(dataDbPath), { recursive: true });
-  const db = new DatabaseSync(dataDbPath);
+function findSchemaSql(): string {
   const here = dirname(fileURLToPath(import.meta.url));
   const candidates = [
     join(here, "schema.sql"),
     join(here, "..", "db", "schema.sql"),
     join(here, "..", "..", "src", "db", "schema.sql"),
+    join(here, "..", "..", "dist", "db", "schema.sql"),
+    resolve(process.cwd(), "src", "db", "schema.sql"),
+    resolve(process.cwd(), "db", "schema.sql"),
+    resolve(process.cwd(), "packages", "shared", "src", "db", "schema.sql"),
   ];
-  let sql: string | undefined;
   for (const p of candidates) {
-    try {
-      sql = readFileSync(p, "utf8");
-      break;
-    } catch {
-      /* next */
-    }
+    if (existsSync(p)) return p;
   }
-  if (!sql) throw new Error("schema.sql not found");
+  throw new Error(
+    `schema.sql not found. searched:\n${candidates.join("\n")}\ncwd=${process.cwd()}`,
+  );
+}
+
+export function openAposDb(dataDbPath: string): AposDb {
+  mkdirSync(dirname(dataDbPath), { recursive: true });
+  const db = new DatabaseSync(dataDbPath);
+  db.exec("PRAGMA busy_timeout = 5000");
+  const sql = readFileSync(findSchemaSql(), "utf8");
   db.exec(sql);
   return db;
 }

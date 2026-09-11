@@ -12,8 +12,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - run: npm ci
-      - run: npm run build -w @apos/shared
-      - run: npm run smoke -w @apos/shared
-      - run: npm test -w @apos/shared
-      - run: npm run build -w @apos/electron
+      - name: Install
+        run: npm ci
+      - name: Build shared
+        run: npm run build -w @apos/shared
+      - name: Copy schema to dist
+        run: mkdir -p packages/shared/dist/db && cp packages/shared/src/db/schema.sql packages/shared/dist/db/schema.sql
+      - name: Smoke domain
+        run: npm run smoke -w @apos/shared
+      - name: Unit tests
+        run: npm test -w @apos/shared -- --reporter=verbose
+      - name: Build electron
+        run: npm run build -w @apos/electron

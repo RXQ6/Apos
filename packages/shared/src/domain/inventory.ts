@@ -18,11 +18,19 @@ export function upsertSku(
      ON CONFLICT(id) DO UPDATE SET title=excluded.title, price_cents=excluded.price_cents`,
   ).run(sku.id, sku.title, sku.priceCents);
   if (sku.onHand !== undefined) {
-    db.prepare(
-      `INSERT INTO inventory (sku_id, on_hand, preoccupied) VALUES (?, ?, 0)
-       ON CONFLICT(sku_id) DO UPDATE SET on_hand=excluded.on_hand
-       WHERE inventory.preoccupied <= excluded.on_hand`,
-    ).run(sku.id, sku.onHand);
+    const inv = db
+      .prepare(`SELECT preoccupied FROM inventory WHERE sku_id = ?`)
+      .get(sku.id) as { preoccupied: number } | undefined;
+    if (!inv) {
+      db.prepare(
+        `INSERT INTO inventory (sku_id, on_hand, preoccupied) VALUES (?, ?, 0)`,
+      ).run(sku.id, sku.onHand);
+    } else if (sku.onHand >= inv.preoccupied) {
+      db.prepare(`UPDATE inventory SET on_hand = ? WHERE sku_id = ?`).run(
+        sku.onHand,
+        sku.id,
+      );
+    }
   }
   void ts;
   return getSku(db, sku.id);
