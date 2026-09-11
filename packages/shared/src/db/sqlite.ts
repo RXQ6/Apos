@@ -2,37 +2,17 @@
  * SQLite access via Node built-in `node:sqlite` (Node ≥ 22.5).
  */
 import { DatabaseSync } from "node:sqlite";
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { mkdirSync } from "node:fs";
+import { dirname } from "node:path";
+import { APOS_SCHEMA_SQL } from "./schema.js";
 
 export type AposDb = DatabaseSync;
-
-function findSchemaSql(): string {
-  const here = dirname(fileURLToPath(import.meta.url));
-  const candidates = [
-    join(here, "schema.sql"),
-    join(here, "..", "db", "schema.sql"),
-    join(here, "..", "..", "src", "db", "schema.sql"),
-    join(here, "..", "..", "dist", "db", "schema.sql"),
-    resolve(process.cwd(), "src", "db", "schema.sql"),
-    resolve(process.cwd(), "db", "schema.sql"),
-    resolve(process.cwd(), "packages", "shared", "src", "db", "schema.sql"),
-  ];
-  for (const p of candidates) {
-    if (existsSync(p)) return p;
-  }
-  throw new Error(
-    `schema.sql not found. searched:\n${candidates.join("\n")}\ncwd=${process.cwd()}`,
-  );
-}
 
 export function openAposDb(dataDbPath: string): AposDb {
   mkdirSync(dirname(dataDbPath), { recursive: true });
   const db = new DatabaseSync(dataDbPath);
   db.exec("PRAGMA busy_timeout = 5000");
-  const sql = readFileSync(findSchemaSql(), "utf8");
-  db.exec(sql);
+  db.exec(APOS_SCHEMA_SQL);
   return db;
 }
 
