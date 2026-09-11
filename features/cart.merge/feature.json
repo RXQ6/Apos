@@ -1,0 +1,24 @@
+{
+  "id": "cart.merge",
+  "title": "登录合并购物车",
+  "summary": "登录后将游客车合并到用户车。",
+  "status": "designed",
+  "domain": "cart",
+  "kind": "variant",
+  "priority": "P0",
+  "actors": ["buyer", "system"],
+  "modules": { "primary": "cart", "involved": ["cart", "customer"] },
+  "depends_on": ["customer.login", "cart.add"],
+  "methods": [
+    { "ref": "cart.merge", "role": "define" },
+    { "ref": "cart.list", "role": "call" }
+  ],
+  "states": { "before": ["guest_cart", "login"], "after": ["merged_cart"] },
+  "acceptance": ["同 SKU 数量相加", "重复 merge 不重复叠加", "失败不丢游客车"],
+  "errors": [{ "code": "MERGE_FAILED", "next": "cart.list" }],
+  "docs": {
+    "scenario": "features/cart.merge/SCENARIO.md",
+    "modules": ["modules/cart/ROUTING.md"]
+  },
+  "harness": { "status": "not_started", "verify": "docs:verify" }
+}

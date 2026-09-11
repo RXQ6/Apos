@@ -15,8 +15,9 @@
 | 方法 ID | 一句话 | 文档 |
 |---|---|---|
 | pricing.quote | 对购物车/商品行报价 | `methods/quote.md` |
-| pricing.coupon_apply | 应用优惠券 | 后续补 |
-| pricing.resolve_conflict | 多优惠冲突决策 | 后续补 |
+| pricing.coupon_receive | 领券 | `methods/coupon_receive.md` |
+| pricing.coupon_apply | 应用优惠券 | `methods/coupon_apply.md` |
+| pricing.resolve_conflict | 多优惠冲突决策 | `methods/resolve_conflict.md` |
 
 ## 直接依赖模块
 

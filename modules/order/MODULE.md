@@ -20,6 +20,7 @@
 | order.cancel | 用户取消 | `methods/cancel.md` |
 | order.get | 查询订单 | `methods/get.md` |
 | order.change_address | 支付前改地址 | `methods/change_address.md` |
+| order.repay | 再次支付 | 见场景 `order.repay` → payment.charge |
 
 ## 直接依赖模块
 

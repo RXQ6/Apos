@@ -1,0 +1,21 @@
+{
+  "id": "inventory.release",
+  "title": "释放预占",
+  "summary": "取消/超时/关单后释放库存预占。",
+  "status": "designed",
+  "domain": "inventory",
+  "kind": "exception",
+  "priority": "P0",
+  "actors": ["system"],
+  "modules": { "primary": "inventory", "involved": ["inventory", "order", "payment"] },
+  "depends_on": ["inventory.preoccupy", "order.cancel", "order.timeout_cancel"],
+  "methods": [{ "ref": "inventory.release", "role": "define" }],
+  "states": { "before": ["preoccupied"], "after": ["released"] },
+  "acceptance": ["幂等", "可售恢复", "已扣减不可 release 当预占"],
+  "errors": [{ "code": "PREOCCUPY_NOT_FOUND", "next": "order.get" }],
+  "docs": {
+    "scenario": "features/inventory.release/SCENARIO.md",
+    "modules": ["modules/inventory/MODULE.md"]
+  },
+  "harness": { "status": "not_started", "verify": "docs:verify" }
+}

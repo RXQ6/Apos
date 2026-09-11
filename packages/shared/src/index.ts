@@ -5,3 +5,4 @@ export * from "./session.js";
 export * from "./agent/runner.js";
 export * from "./tools/index.js";
 export * from "./db/sqlite.js";
+export * from "./credentials.js";

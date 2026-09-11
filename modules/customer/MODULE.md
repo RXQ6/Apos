@@ -14,7 +14,9 @@
 
 | 方法 ID | 一句话 | 文档 |
 |---|---|---|
+| customer.register | 注册 | `methods/register.md` |
 | customer.login | 登录/会话 | `methods/login.md` |
+| customer.logout | 登出吊销会话 | `methods/logout.md` |
 | customer.get | 查询客户信息 | `methods/get.md` |
 | customer.address_save | 保存地址 | `methods/address_save.md` |
 | customer.address_list | 地址列表 | 后续补 |

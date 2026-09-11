@@ -1,0 +1,24 @@
+{
+  "id": "cart.update",
+  "title": "修改购物车",
+  "summary": "改数量、勾选或删除购物车行。",
+  "status": "designed",
+  "domain": "cart",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": ["buyer"],
+  "modules": { "primary": "cart", "involved": ["cart", "catalog"] },
+  "depends_on": ["cart.add"],
+  "methods": [
+    { "ref": "cart.update", "role": "define" },
+    { "ref": "cart.list", "role": "call" }
+  ],
+  "states": { "before": ["cart_has_line"], "after": ["cart_updated"] },
+  "acceptance": ["数量>0", "越权拒绝", "删除后不可结算该行"],
+  "errors": [{ "code": "FORBIDDEN", "next": "customer.login" }],
+  "docs": {
+    "scenario": "features/cart.update/SCENARIO.md",
+    "modules": ["modules/cart/MODULE.md"]
+  },
+  "harness": { "status": "not_started", "verify": "docs:verify" }
+}

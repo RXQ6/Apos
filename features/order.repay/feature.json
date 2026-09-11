@@ -1,0 +1,24 @@
+{
+  "id": "order.repay",
+  "title": "订单再次支付",
+  "summary": "从订单中心对待支付单重新发起支付。",
+  "status": "designed",
+  "domain": "order",
+  "kind": "variant",
+  "priority": "P0",
+  "actors": ["buyer"],
+  "modules": { "primary": "order", "involved": ["order", "payment"] },
+  "depends_on": ["order.get", "payment.charge"],
+  "methods": [
+    { "ref": "order.get", "role": "call" },
+    { "ref": "payment.charge", "role": "define" }
+  ],
+  "states": { "before": ["pending_payment"], "after": ["paying"] },
+  "acceptance": ["仅 pending_payment 可重付", "已关闭不可重付"],
+  "errors": [{ "code": "ORDER_NOT_PAYABLE", "next": "order.get" }],
+  "docs": {
+    "scenario": "features/order.repay/SCENARIO.md",
+    "modules": ["modules/order/ROUTING.md"]
+  },
+  "harness": { "status": "not_started", "verify": "docs:verify" }
+}

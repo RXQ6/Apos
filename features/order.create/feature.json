@@ -88,7 +88,7 @@
     ]
   },
   "harness": {
-    "status": "active",
-    "verify": "docs:verify; scenario:walk order.create"
+    "status": "passing",
+    "verify": "docs:verify; scenario:walk order.create; journey:walk"
   }
 }

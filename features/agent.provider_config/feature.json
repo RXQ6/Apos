@@ -1,0 +1,53 @@
+{
+  "id": "agent.provider_config",
+  "title": "模型通道配置",
+  "summary": "配置 Pi/pi-ai 的 Provider 与 API Key（加密落盘）。",
+  "status": "designed",
+  "domain": "agent",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": [
+    "buyer"
+  ],
+  "modules": {
+    "primary": "customer",
+    "involved": [
+      "customer"
+    ]
+  },
+  "depends_on": [
+    "agent.workbench"
+  ],
+  "methods": [
+    {
+      "ref": "customer.get",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "workbench_ready"
+    ],
+    "after": [
+      "provider_configured"
+    ]
+  },
+  "acceptance": [
+    "Key 不进 git；默认可只保存不调用网络",
+    "可切换 provider/baseUrl/model"
+  ],
+  "errors": [
+    {
+      "code": "PROVIDER_INVALID",
+      "next": "agent.provider_config"
+    }
+  ],
+  "docs": {
+    "scenario": "features/agent.provider_config/SCENARIO.md",
+    "spec": "docs/tech-stack.md"
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

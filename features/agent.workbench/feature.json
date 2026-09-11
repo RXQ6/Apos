@@ -1,0 +1,51 @@
+{
+  "id": "agent.workbench",
+  "title": "场景规划工作台",
+  "summary": "Electron 工作台：列场景、对话 Agent、流式回显、权限三档。",
+  "status": "designed",
+  "domain": "agent",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": [
+    "buyer",
+    "system"
+  ],
+  "modules": {
+    "primary": "customer",
+    "involved": [
+      "customer",
+      "order"
+    ]
+  },
+  "depends_on": [],
+  "states": {
+    "before": [
+      "app_launch"
+    ],
+    "after": [
+      "workbench_ready"
+    ]
+  },
+  "acceptance": [
+    "可列出 27+ feature 与 harness 状态",
+    "可切换 explore/ask/allow-all",
+    "explore 下写工具被拒绝"
+  ],
+  "errors": [
+    {
+      "code": "APP_INIT_FAILED",
+      "next": "agent.workbench"
+    }
+  ],
+  "docs": {
+    "scenario": "features/agent.workbench/SCENARIO.md",
+    "spec": "docs/tech-stack.md",
+    "modules": [
+      "packages/shared/src/tools/index.ts"
+    ]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

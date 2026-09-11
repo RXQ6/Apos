@@ -19,31 +19,43 @@
 
 | ID | 标题 | 优先级 | 状态 | 验证 | 场景目录 |
 |---|---|---|---|---|---|
-| order.create | 创建订单 | P0 | active | docs:verify + 场景走读 | `features/order.create/` |
+| order.create | 创建订单 | P0 | passing | docs:verify + L3 走读 | `features/order.create/` |
+| agent.workbench | 场景规划工作台 | P0 | not_started | docs:verify | `features/agent.workbench/` |
+| agent.provider_config | 模型通道配置 | P0 | not_started | docs:verify | `features/agent.provider_config/` |
 | customer.register | 用户注册 | P0 | not_started | docs:verify | `features/customer.register/` |
 | customer.login | 用户登录 | P0 | not_started | docs:verify | `features/customer.login/` |
+| customer.logout | 退出登录 | P1 | not_started | docs:verify | `features/customer.logout/` |
 | customer.address_save | 保存收货地址 | P1 | not_started | docs:verify | `features/customer.address_save/` |
 | catalog.search | 商品搜索 | P0 | not_started | docs:verify | `features/catalog.search/` |
 | catalog.detail | 商品详情 | P0 | not_started | docs:verify | `features/catalog.detail/` |
 | catalog.publish | 商品上架 | P1 | not_started | docs:verify | `features/catalog.publish/` |
 | catalog.off_shelf | 商品下架 | P1 | not_started | docs:verify | `features/catalog.off_shelf/` |
 | cart.add | 加购 | P0 | not_started | docs:verify | `features/cart.add/` |
+| cart.update | 改购物车 | P0 | not_started | docs:verify | `features/cart.update/` |
 | cart.checkout_ready | 结算就绪 | P0 | not_started | docs:verify | `features/cart.checkout_ready/` |
+| cart.merge | 登录合并购物车 | P0 | not_started | docs:verify | `features/cart.merge/` |
 | inventory.preoccupy | 下单预占 | P0 | not_started | docs:verify | `features/inventory.preoccupy/` |
+| inventory.deduct | 支付扣减 | P0 | not_started | docs:verify | `features/inventory.deduct/` |
+| inventory.release | 释放预占 | P0 | not_started | docs:verify | `features/inventory.release/` |
 | inventory.oversell_guard | 超卖防护 | P0 | not_started | docs:verify | `features/inventory.oversell_guard/` |
 | pricing.quote | 结算报价 | P0 | not_started | docs:verify | `features/pricing.quote/` |
-| pricing.coupon_apply | 优惠券 | P1 | not_started | docs:verify | `features/pricing.coupon_apply/` |
+| pricing.coupon_receive | 领券 | P1 | not_started | docs:verify | `features/pricing.coupon_receive/` |
+| pricing.coupon_apply | 用券 | P1 | not_started | docs:verify | `features/pricing.coupon_apply/` |
 | pricing.promo_conflict | 优惠冲突 | P1 | not_started | docs:verify | `features/pricing.promo_conflict/` |
 | payment.charge | 发起支付 | P0 | not_started | docs:verify | `features/payment.charge/` |
+| payment.fail_retry | 支付失败重试 | P0 | not_started | docs:verify | `features/payment.fail_retry/` |
 | payment.callback | 支付回调 | P0 | not_started | docs:verify + 场景走读 | `features/payment.callback/` |
 | payment.timeout_close | 支付超时 | P0 | not_started | docs:verify | `features/payment.timeout_close/` |
 | order.get | 订单详情 | P0 | not_started | docs:verify | `features/order.get/` |
+| order.repay | 再次支付 | P0 | not_started | docs:verify | `features/order.repay/` |
 | order.cancel | 用户取消 | P0 | not_started | docs:verify | `features/order.cancel/` |
 | order.timeout_cancel | 超时关单 | P0 | not_started | docs:verify | `features/order.timeout_cancel/` |
 | order.address_change | 支付前改址 | P1 | not_started | docs:verify | `features/order.address_change/` |
 | fulfillment.ship | 发货 | P0 | not_started | docs:verify | `features/fulfillment.ship/` |
 | fulfillment.sign | 签收 | P0 | not_started | docs:verify | `features/fulfillment.sign/` |
+| fulfillment.track | 物流轨迹 | P1 | not_started | docs:verify | `features/fulfillment.track/` |
 | fulfillment.partial_ship | 部分发货 | P1 | not_started | docs:verify | `features/fulfillment.partial_ship/` |
+| aftersale.approve | 售后审核 | P0 | not_started | docs:verify | `features/aftersale.approve/` |
 | aftersale.refund_only | 仅退款 | P0 | not_started | docs:verify | `features/aftersale.refund_only/` |
 | aftersale.return_refund | 退货退款 | P0 | not_started | docs:verify | `features/aftersale.return_refund/` |
 

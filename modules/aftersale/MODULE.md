@@ -15,9 +15,9 @@
 | 方法 ID | 一句话 | 文档 |
 |---|---|---|
 | aftersale.open | 创建售后单 | `methods/open.md` |
-| aftersale.approve | 审核通过 | 后续补 |
+| aftersale.approve | 审核通过 | `methods/approve.md` |
 | aftersale.refund_only | 仅退款完结 | `methods/refund_only.md` |
-| aftersale.return_refund | 退货退款 | 后续补 |
+| aftersale.return_refund | 退货退款 | `methods/return_refund.md` |
 
 ## 直接依赖模块
 

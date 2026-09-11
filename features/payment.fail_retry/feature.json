@@ -1,0 +1,24 @@
+{
+  "id": "payment.fail_retry",
+  "title": "支付失败重试",
+  "summary": "支付失败或用户中断后可重新拉起，不双扣。",
+  "status": "designed",
+  "domain": "payment",
+  "kind": "exception",
+  "priority": "P0",
+  "actors": ["buyer", "system"],
+  "modules": { "primary": "payment", "involved": ["payment", "order"] },
+  "depends_on": ["payment.charge", "order.create"],
+  "methods": [
+    { "ref": "payment.charge", "role": "define" },
+    { "ref": "payment.create", "role": "call" }
+  ],
+  "states": { "before": ["failed", "pending_payment"], "after": ["paying"] },
+  "acceptance": ["金额仍为快照", "成功一次后不可再成功扣款", "可换支付方式"],
+  "errors": [{ "code": "CHANNEL_UNAVAILABLE", "next": "payment.charge" }],
+  "docs": {
+    "scenario": "features/payment.fail_retry/SCENARIO.md",
+    "modules": ["modules/payment/ROUTING.md"]
+  },
+  "harness": { "status": "not_started", "verify": "docs:verify" }
+}

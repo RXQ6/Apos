@@ -1,0 +1,21 @@
+{
+  "id": "customer.logout",
+  "title": "退出登录",
+  "summary": "吊销会话并回到匿名态。",
+  "status": "designed",
+  "domain": "customer",
+  "kind": "happy-path",
+  "priority": "P1",
+  "actors": ["buyer"],
+  "modules": { "primary": "customer", "involved": ["customer"] },
+  "depends_on": ["customer.login"],
+  "methods": [{ "ref": "customer.logout", "role": "define" }],
+  "states": { "before": ["logged_in"], "after": ["anonymous"] },
+  "acceptance": ["旧 token 不可用", "游客车策略按 Spec 保留或清空"],
+  "errors": [],
+  "docs": {
+    "scenario": "features/customer.logout/SCENARIO.md",
+    "modules": ["modules/customer/MODULE.md"]
+  },
+  "harness": { "status": "not_started", "verify": "docs:verify" }
+}

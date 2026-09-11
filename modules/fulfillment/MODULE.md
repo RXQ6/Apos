@@ -16,8 +16,8 @@
 |---|---|---|
 | fulfillment.create_shipment | 创建发货单 | `methods/create_shipment.md` |
 | fulfillment.ship | 确认发货 | `methods/ship.md` |
-| fulfillment.sign | 签收 | 后续补 |
-| fulfillment.track | 轨迹查询 | 后续补 |
+| fulfillment.sign | 签收 | `methods/sign.md` |
+| fulfillment.track | 轨迹查询 | `methods/track.md` |
 
 ## 直接依赖模块
 
