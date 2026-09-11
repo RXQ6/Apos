@@ -6,8 +6,12 @@
 
 ```bash
 npm install
+# Electron 二进制若下载失败（GitHub 超时），可用镜像后重装：
+# $env:ELECTRON_MIRROR="https://npmmirror.com/mirrors/electron/"
+# npm install electron --workspace=@apos/electron
 npm run verify          # 文档 L1
-npm run typecheck       # TS（需先 build shared）
+npm run test            # domain 单测
+npm run smoke           # 冒烟
 npm run build:shared
 npm run dev             # Electron + Vite
 ```
