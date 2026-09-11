@@ -3,6 +3,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   AposAgentRunner,
+  getProvidersJson,
   insertMessage,
   insertSession,
   listFeatures,
@@ -10,11 +11,14 @@ import {
   newSessionMeta,
   openAposDb,
   resolveAppPaths,
+  setProvidersJson,
   type PermissionMode,
+  type ProviderConfig,
 } from "@apos/shared";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const repoRoot = process.env.APOS_REPO_ROOT ?? join(__dirname, "..", "..", "..", "..", "..");
+const repoRoot =
+  process.env.APOS_REPO_ROOT ?? join(__dirname, "..", "..", "..", "..", "..");
 const paths = resolveAppPaths(process.env.APOS_HOME);
 const db = openAposDb(paths.dataDb);
 
@@ -23,10 +27,24 @@ let runner: AposAgentRunner | null = null;
 let currentSessionId = "";
 let mode: PermissionMode = "ask";
 
+function loadProviders(): ProviderConfig[] {
+  const raw = getProvidersJson(db);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as ProviderConfig[];
+  } catch {
+    return [];
+  }
+}
+
+function log(...args: unknown[]): void {
+  console.log("[apos]", ...args);
+}
+
 function createWindow() {
   win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1280,
+    height: 860,
     title: "Apos（景枢）",
     webPreferences: {
       preload: join(__dirname, "../preload/preload.js"),
@@ -35,11 +53,8 @@ function createWindow() {
     },
   });
   const devUrl = process.env.VITE_DEV_SERVER_URL;
-  if (devUrl) {
-    void win.loadURL(devUrl);
-  } else {
-    void win.loadFile(join(__dirname, "../renderer/index.html"));
-  }
+  if (devUrl) void win.loadURL(devUrl);
+  else void win.loadFile(join(__dirname, "../renderer/index.html"));
 }
 
 function ensureRunner(sessionId: string) {
@@ -48,11 +63,12 @@ function ensureRunner(sessionId: string) {
     sessionsRoot: paths.sessionsDir,
     permissionMode: mode,
     db,
+    providers: loadProviders(),
   });
   runner.on("event", (evt) => {
     win?.webContents.send("apos:agent-event", evt);
   });
-  return runner;
+  log("runner ready", sessionId);
 }
 
 ipcMain.handle("apos:init", async () => {
@@ -63,6 +79,13 @@ ipcMain.handle("apos:init", async () => {
     features,
     sessions,
     mode,
+    providers: loadProviders().map((p) => ({
+      id: p.id,
+      label: p.label,
+      baseUrl: p.baseUrl,
+      model: p.model,
+      apiKey: p.apiKey ? "***" : undefined,
+    })),
     tools: runner?.listTools() ?? [],
   };
 });
@@ -73,12 +96,24 @@ ipcMain.handle("apos:set-mode", async (_e, m: PermissionMode) => {
   return { mode };
 });
 
+ipcMain.handle("apos:save-providers", async (_e, configs: ProviderConfig[]) => {
+  setProvidersJson(db, JSON.stringify(configs ?? []));
+  if (runner) runner.setProviders(loadProviders());
+  return { ok: true };
+});
+
 ipcMain.handle("apos:new-session", async () => {
   const meta = newSessionMeta(`会话 ${new Date().toLocaleString("zh-CN")}`, mode);
   insertSession(db, { ...meta, permissionMode: mode });
   currentSessionId = meta.id;
   ensureRunner(meta.id);
   return meta;
+});
+
+ipcMain.handle("apos:resume-session", async (_e, sessionId: string) => {
+  currentSessionId = sessionId;
+  ensureRunner(sessionId);
+  return { ok: true, sessionId };
 });
 
 ipcMain.handle("apos:send", async (_e, text: string) => {
@@ -90,7 +125,12 @@ ipcMain.handle("apos:send", async (_e, text: string) => {
     }
     ensureRunner(currentSessionId);
   }
-  insertMessage(db, { sessionId: currentSessionId, role: "user", text, ts: Date.now() });
+  insertMessage(db, {
+    sessionId: currentSessionId,
+    role: "user",
+    text,
+    ts: Date.now(),
+  });
   await runner?.handleUserInput(text);
   return { ok: true };
 });
@@ -98,6 +138,7 @@ ipcMain.handle("apos:send", async (_e, text: string) => {
 ipcMain.handle("apos:list-features", async () => listFeatures(repoRoot));
 
 app.whenReady().then(() => {
+  log("app ready", { repoRoot, home: paths.root });
   createWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

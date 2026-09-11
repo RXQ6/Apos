@@ -6,20 +6,40 @@
   "domain": "payment",
   "kind": "happy-path",
   "priority": "P0",
-  "actors": ["buyer", "system"],
+  "actors": [
+    "buyer",
+    "system"
+  ],
   "modules": {
     "primary": "payment",
-    "involved": ["payment", "order"]
+    "involved": [
+      "payment",
+      "order"
+    ]
   },
-  "depends_on": ["order.create"],
-  "conflicts_with": ["payment.timeout_close"],
+  "depends_on": [
+    "order.create"
+  ],
+  "conflicts_with": [
+    "payment.timeout_close"
+  ],
   "methods": [
-    { "ref": "payment.charge", "role": "define" },
-    { "ref": "payment.create", "role": "call" }
+    {
+      "ref": "payment.charge",
+      "role": "define"
+    },
+    {
+      "ref": "payment.create",
+      "role": "call"
+    }
   ],
   "states": {
-    "before": ["pending_payment"],
-    "after": ["paying"]
+    "before": [
+      "pending_payment"
+    ],
+    "after": [
+      "paying"
+    ]
   },
   "acceptance": [
     "金额必须等于订单快照",
@@ -27,15 +47,24 @@
     "失败可重试且不双扣"
   ],
   "errors": [
-    { "code": "AMOUNT_MISMATCH", "next": "order.create" },
-    { "code": "ORDER_NOT_PAYABLE", "next": "order.timeout_cancel" }
+    {
+      "code": "AMOUNT_MISMATCH",
+      "next": "order.create"
+    },
+    {
+      "code": "ORDER_NOT_PAYABLE",
+      "next": "order.timeout_cancel"
+    }
   ],
   "docs": {
     "scenario": "features/payment.charge/SCENARIO.md",
-    "modules": ["modules/payment/MODULE.md", "modules/payment/ROUTING.md"]
+    "modules": [
+      "modules/payment/MODULE.md",
+      "modules/payment/ROUTING.md"
+    ]
   },
   "harness": {
-    "status": "not_started",
+    "status": "passing",
     "verify": "docs:verify"
   }
 }

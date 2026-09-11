@@ -6,21 +6,55 @@
   "domain": "aftersale",
   "kind": "happy-path",
   "priority": "P0",
-  "actors": ["buyer", "warehouse", "admin", "system"],
+  "actors": [
+    "buyer",
+    "warehouse",
+    "admin",
+    "system"
+  ],
   "modules": {
     "primary": "aftersale",
-    "involved": ["aftersale", "order", "fulfillment", "inventory", "payment"]
+    "involved": [
+      "aftersale",
+      "order",
+      "fulfillment",
+      "inventory",
+      "payment"
+    ]
   },
-  "depends_on": ["fulfillment.ship", "payment.callback", "order.get"],
+  "depends_on": [
+    "fulfillment.ship",
+    "payment.callback",
+    "order.get"
+  ],
   "methods": [
-    { "ref": "aftersale.open", "role": "call" },
-    { "ref": "fulfillment.sign", "role": "call" },
-    { "ref": "inventory.release", "role": "call" },
-    { "ref": "payment.refund", "role": "call" }
+    {
+      "ref": "aftersale.open",
+      "role": "call"
+    },
+    {
+      "ref": "fulfillment.sign",
+      "role": "call"
+    },
+    {
+      "ref": "inventory.release",
+      "role": "call"
+    },
+    {
+      "ref": "payment.refund",
+      "role": "call"
+    }
   ],
   "states": {
-    "before": ["shipped", "completed"],
-    "after": ["aftersale_closed", "refunded", "stock_in"]
+    "before": [
+      "shipped",
+      "completed"
+    ],
+    "after": [
+      "aftersale_closed",
+      "refunded",
+      "stock_in"
+    ]
   },
   "acceptance": [
     "必须仓收货成功后才 refund + 回库",
@@ -28,14 +62,20 @@
     "金额不超过实付"
   ],
   "errors": [
-    { "code": "RETURN_NOT_RECEIVED", "next": "aftersale.return_refund" }
+    {
+      "code": "RETURN_NOT_RECEIVED",
+      "next": "aftersale.return_refund"
+    }
   ],
   "docs": {
     "scenario": "features/aftersale.return_refund/SCENARIO.md",
-    "modules": ["modules/aftersale/ROUTING.md", "modules/fulfillment/ROUTING.md"]
+    "modules": [
+      "modules/aftersale/ROUTING.md",
+      "modules/fulfillment/ROUTING.md"
+    ]
   },
   "harness": {
-    "status": "not_started",
+    "status": "passing",
     "verify": "docs:verify",
     "blocked_reason": ""
   }

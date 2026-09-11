@@ -14,8 +14,12 @@
   "scripts": {
     "verify": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1",
     "typecheck": "tsc -b",
+    "test": "npm test -w @apos/shared",
+    "smoke": "npm run smoke -w @apos/shared",
+    "gate": "npm run verify && npm run build:shared && npm run smoke && npm run test",
     "dev": "npm run dev -w @apos/electron",
-    "build:shared": "npm run build -w @apos/shared"
+    "build:shared": "npm run build -w @apos/shared",
+    "build:electron": "npm run build -w @apos/electron"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

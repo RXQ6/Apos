@@ -6,32 +6,50 @@
   "domain": "catalog",
   "kind": "happy-path",
   "priority": "P0",
-  "actors": ["buyer"],
+  "actors": [
+    "buyer"
+  ],
   "modules": {
     "primary": "catalog",
-    "involved": ["catalog"]
+    "involved": [
+      "catalog"
+    ]
   },
-  "depends_on": ["catalog.publish"],
+  "depends_on": [
+    "catalog.publish"
+  ],
   "methods": [
-    { "ref": "catalog.search", "role": "define" }
+    {
+      "ref": "catalog.search",
+      "role": "define"
+    }
   ],
   "states": {
-    "before": ["on_shelf_exists"],
-    "after": ["search_results"]
+    "before": [
+      "on_shelf_exists"
+    ],
+    "after": [
+      "search_results"
+    ]
   },
   "acceptance": [
     "默认仅返回 on_shelf",
     "结果可分页"
   ],
   "errors": [
-    { "code": "EMPTY_QUERY", "next": "catalog.search" }
+    {
+      "code": "EMPTY_QUERY",
+      "next": "catalog.search"
+    }
   ],
   "docs": {
     "scenario": "features/catalog.search/SCENARIO.md",
-    "modules": ["modules/catalog/MODULE.md"]
+    "modules": [
+      "modules/catalog/MODULE.md"
+    ]
   },
   "harness": {
-    "status": "not_started",
+    "status": "passing",
     "verify": "docs:verify"
   }
 }

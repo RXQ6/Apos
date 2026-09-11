@@ -6,33 +6,57 @@
   "domain": "cart",
   "kind": "happy-path",
   "priority": "P0",
-  "actors": ["buyer", "system"],
+  "actors": [
+    "buyer",
+    "system"
+  ],
   "modules": {
     "primary": "cart",
-    "involved": ["cart", "catalog"]
+    "involved": [
+      "cart",
+      "catalog"
+    ]
   },
-  "depends_on": ["catalog.detail", "customer.login"],
+  "depends_on": [
+    "catalog.detail",
+    "customer.login"
+  ],
   "methods": [
-    { "ref": "cart.add", "role": "define" },
-    { "ref": "catalog.get", "role": "call" }
+    {
+      "ref": "cart.add",
+      "role": "define"
+    },
+    {
+      "ref": "catalog.get",
+      "role": "call"
+    }
   ],
   "states": {
-    "before": ["anonymous_or_logged_in"],
-    "after": ["cart_has_line"]
+    "before": [
+      "anonymous_or_logged_in"
+    ],
+    "after": [
+      "cart_has_line"
+    ]
   },
   "acceptance": [
     "仅 on_shelf SKU 可加购",
     "加购后库存未被预占"
   ],
   "errors": [
-    { "code": "ITEM_OFF_SHELF", "next": "catalog.detail" }
+    {
+      "code": "ITEM_OFF_SHELF",
+      "next": "catalog.detail"
+    }
   ],
   "docs": {
     "scenario": "features/cart.add/SCENARIO.md",
-    "modules": ["modules/cart/MODULE.md"]
+    "modules": [
+      "modules/cart/MODULE.md"
+    ]
   },
   "harness": {
-    "status": "not_started",
+    "status": "passing",
     "verify": "docs:verify"
   }
 }

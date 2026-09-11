@@ -126,3 +126,35 @@ body,
   padding: 0 18px;
   cursor: pointer;
 }
+
+.settings-btn, .settings button, .linkish {
+  width: 100%;
+  margin: 4px 0 8px;
+  background: #1a1f2a;
+  border: 1px solid #2a2f3a;
+  color: #c5cad3;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.settings label {
+  display: block;
+  font-size: 11px;
+  color: #9aa3b2;
+  margin-bottom: 6px;
+}
+.settings input {
+  width: 100%;
+  margin-top: 2px;
+  background: #0f1115;
+  border: 1px solid #2a2f3a;
+  border-radius: 4px;
+  color: inherit;
+  padding: 6px;
+}
+.linkish {
+  text-align: left;
+  background: transparent;
+  border: 0;
+}

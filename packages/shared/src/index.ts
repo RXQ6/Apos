@@ -6,4 +6,6 @@ export * from "./agent/runner.js";
 export * from "./tools/index.js";
 export * from "./db/sqlite.js";
 export * from "./credentials.js";
+export * from "./settings.js";
 export * from "./domain/index.js";
+export * from "./agent/pi-bridge.js";

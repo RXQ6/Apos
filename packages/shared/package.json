@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty",
-    "smoke": "npm run build && node scripts/smoke-domain.mjs"
+    "smoke": "npm run build && node scripts/smoke-domain.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "^0.85.1",

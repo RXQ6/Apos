@@ -1,6 +1,6 @@
 # tech-stack — 技术选型（已冻结）
 
-> 2026-09-11 用户确认冻结。业务代码尚未生成；本文件是实现前的唯一栈约定。
+> 2026-09-11 用户确认冻结。运行时竖切与全域 domain 服务已落地（见 `packages/shared/src/domain/`）。
 > 参考蓝本：[craft-agents-oss](https://github.com/craft-ai-agents/craft-agents-oss)（布局/UI/构建对齐；产品边界不同）。
 
 ## 产品形态

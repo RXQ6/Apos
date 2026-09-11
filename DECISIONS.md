@@ -23,3 +23,7 @@
 | 2026-09-11 | 首期 runner 用 echo+工具事件面，Pi SDK 仅作依赖预留 | 无 Key 也可验证 UI/工具/权限 |
 | 2026-09-11 | 本机无 Bun 时用 Node 24 `node:sqlite`；接口对齐后续 bun:sqlite | 环境限制，不改契约 |
 | 2026-09-11 | 最小运行时切片：SKU/库存/预占/订单/支付扣减/取消释放，进程内 + SQLite 事务 | 先验证契约可落地，再服务化 |
+| 2026-09-11 | 全域服务补齐 cart/customer/catalog/payment/fulfillment/aftersale + 进程内事件 | A–D 落地路径 |
+| 2026-09-11 | Pi 无 Key 时 echo/工具；有 Key 走 pi-agent-core/pi-ai bridge | 可离线开发 |
+| 2026-09-11 | 嵌套事务用 SAVEPOINT | 避免 payment callback 内再 BEGIN |
+| 2026-09-11 | E 后置：MCP/秒杀/跨境/复杂促销/完整安装包 | 见 PROGRESS |

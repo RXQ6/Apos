@@ -6,19 +6,59 @@
   "domain": "inventory",
   "kind": "happy-path",
   "priority": "P0",
-  "actors": ["system"],
-  "modules": { "primary": "inventory", "involved": ["inventory", "payment", "order"] },
-  "depends_on": ["inventory.preoccupy", "payment.callback"],
-  "methods": [
-    { "ref": "inventory.deduct", "role": "define" },
-    { "ref": "order.mark_paid", "role": "call" }
+  "actors": [
+    "system"
   ],
-  "states": { "before": ["preoccupied"], "after": ["deducted"] },
-  "acceptance": ["幂等", "扣减后 preoccupy 状态 deducted", "无预占不盲扣"],
-  "errors": [{ "code": "PREOCCUPY_NOT_FOUND", "next": "inventory.preoccupy" }],
+  "modules": {
+    "primary": "inventory",
+    "involved": [
+      "inventory",
+      "payment",
+      "order"
+    ]
+  },
+  "depends_on": [
+    "inventory.preoccupy",
+    "payment.callback"
+  ],
+  "methods": [
+    {
+      "ref": "inventory.deduct",
+      "role": "define"
+    },
+    {
+      "ref": "order.mark_paid",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "preoccupied"
+    ],
+    "after": [
+      "deducted"
+    ]
+  },
+  "acceptance": [
+    "幂等",
+    "扣减后 preoccupy 状态 deducted",
+    "无预占不盲扣"
+  ],
+  "errors": [
+    {
+      "code": "PREOCCUPY_NOT_FOUND",
+      "next": "inventory.preoccupy"
+    }
+  ],
   "docs": {
     "scenario": "features/inventory.deduct/SCENARIO.md",
-    "modules": ["modules/inventory/ROUTING.md", "modules/payment/ROUTING.md"]
+    "modules": [
+      "modules/inventory/ROUTING.md",
+      "modules/payment/ROUTING.md"
+    ]
   },
-  "harness": { "status": "not_started", "verify": "docs:verify" }
+  "harness": {
+    "status": "passing",
+    "verify": "docs:verify"
+  }
 }

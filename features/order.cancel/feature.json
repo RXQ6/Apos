@@ -6,20 +6,41 @@
   "domain": "order",
   "kind": "exception",
   "priority": "P0",
-  "actors": ["buyer", "system"],
+  "actors": [
+    "buyer",
+    "system"
+  ],
   "modules": {
     "primary": "order",
-    "involved": ["order", "inventory", "payment"]
+    "involved": [
+      "order",
+      "inventory",
+      "payment"
+    ]
   },
-  "depends_on": ["order.create"],
-  "conflicts_with": ["payment.callback"],
+  "depends_on": [
+    "order.create"
+  ],
+  "conflicts_with": [
+    "payment.callback"
+  ],
   "methods": [
-    { "ref": "order.cancel", "role": "define" },
-    { "ref": "inventory.release", "role": "call" }
+    {
+      "ref": "order.cancel",
+      "role": "define"
+    },
+    {
+      "ref": "inventory.release",
+      "role": "call"
+    }
   ],
   "states": {
-    "before": ["pending_payment"],
-    "after": ["cancelled"]
+    "before": [
+      "pending_payment"
+    ],
+    "after": [
+      "cancelled"
+    ]
   },
   "acceptance": [
     "仅未支付可取消",
@@ -27,14 +48,19 @@
     "与支付成功竞态以支付为准"
   ],
   "errors": [
-    { "code": "ORDER_ALREADY_PAID", "next": "payment.callback" }
+    {
+      "code": "ORDER_ALREADY_PAID",
+      "next": "payment.callback"
+    }
   ],
   "docs": {
     "scenario": "features/order.cancel/SCENARIO.md",
-    "modules": ["modules/order/ROUTING.md"]
+    "modules": [
+      "modules/order/ROUTING.md"
+    ]
   },
   "harness": {
-    "status": "not_started",
+    "status": "passing",
     "verify": "docs:verify"
   }
 }

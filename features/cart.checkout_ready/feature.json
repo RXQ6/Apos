@@ -6,33 +6,58 @@
   "domain": "cart",
   "kind": "happy-path",
   "priority": "P0",
-  "actors": ["buyer", "system"],
+  "actors": [
+    "buyer",
+    "system"
+  ],
   "modules": {
     "primary": "cart",
-    "involved": ["cart", "catalog", "order"]
+    "involved": [
+      "cart",
+      "catalog",
+      "order"
+    ]
   },
-  "depends_on": ["cart.add"],
+  "depends_on": [
+    "cart.add"
+  ],
   "methods": [
-    { "ref": "cart.checkout_ready", "role": "define" },
-    { "ref": "cart.list", "role": "call" }
+    {
+      "ref": "cart.checkout_ready",
+      "role": "define"
+    },
+    {
+      "ref": "cart.list",
+      "role": "call"
+    }
   ],
   "states": {
-    "before": ["cart_has_checked_lines"],
-    "after": ["checkout_batch_ready"]
+    "before": [
+      "cart_has_checked_lines"
+    ],
+    "after": [
+      "checkout_batch_ready"
+    ]
   },
   "acceptance": [
     "存在 checkout_batch_id",
     "失效行不得进入 batch"
   ],
   "errors": [
-    { "code": "LINE_INVALID", "next": "cart.update" }
+    {
+      "code": "LINE_INVALID",
+      "next": "cart.update"
+    }
   ],
   "docs": {
     "scenario": "features/cart.checkout_ready/SCENARIO.md",
-    "modules": ["modules/cart/ROUTING.md", "modules/order/ROUTING.md"]
+    "modules": [
+      "modules/cart/ROUTING.md",
+      "modules/order/ROUTING.md"
+    ]
   },
   "harness": {
-    "status": "not_started",
+    "status": "passing",
     "verify": "docs:verify"
   }
 }
