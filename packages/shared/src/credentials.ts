@@ -5,7 +5,7 @@
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import type { ProviderConfig } from "../types.js";
+import type { ProviderConfig } from "./types.js";
 
 const MAGIC = "APOS1";
 
