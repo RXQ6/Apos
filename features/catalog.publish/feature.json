@@ -1,0 +1,58 @@
+{
+  "id": "catalog.publish",
+  "title": "商品上架发布",
+  "summary": "将草稿 SPU 发布为在售，供下单链路读取。",
+  "status": "designed",
+  "domain": "catalog",
+  "kind": "happy-path",
+  "priority": "P1",
+  "actors": [
+    "admin"
+  ],
+  "modules": {
+    "primary": "catalog",
+    "involved": [
+      "inventory"
+    ]
+  },
+  "depends_on": [],
+  "methods": [
+    {
+      "ref": "catalog.publish",
+      "role": "define"
+    },
+    {
+      "ref": "inventory.get",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "draft"
+    ],
+    "after": [
+      "on_shelf"
+    ]
+  },
+  "acceptance": [
+    "属性完整才可上架",
+    "上架后 catalog.get 对下单链路可见"
+  ],
+  "errors": [
+    {
+      "code": "ATTRIBUTE_INCOMPLETE",
+      "next": "catalog.publish"
+    }
+  ],
+  "docs": {
+    "scenario": "features/catalog.publish/SCENARIO.md",
+    "spec": "docs/compose/spec/ecommerce-scenario-routing.md",
+    "modules": [
+      "modules/catalog/MODULE.md"
+    ]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

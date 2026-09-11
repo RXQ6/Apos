@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "feature.schema.json",
+  "title": "EcommerceScenarioFeature",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "summary",
+    "status",
+    "domain",
+    "kind",
+    "priority",
+    "modules",
+    "depends_on",
+    "acceptance",
+    "docs",
+    "harness"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$" },
+    "title": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "status": {
+      "enum": ["draft", "designed", "in-progress", "delivered", "deprecated"]
+    },
+    "domain": {
+      "enum": [
+        "catalog",
+        "inventory",
+        "pricing",
+        "order",
+        "payment",
+        "fulfillment",
+        "aftersale",
+        "customer",
+        "cart"
+      ]
+    },
+    "kind": {
+      "enum": ["happy-path", "exception", "variant", "campaign"]
+    },
+    "priority": { "enum": ["P0", "P1", "P2"] },
+    "actors": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "modules": {
+      "type": "object",
+      "required": ["primary", "involved"],
+      "additionalProperties": false,
+      "properties": {
+        "primary": { "type": "string" },
+        "involved": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    },
+    "depends_on": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "conflicts_with": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "methods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ref", "role"],
+        "additionalProperties": false,
+        "properties": {
+          "ref": { "type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$" },
+          "role": { "enum": ["define", "call"] }
+        }
+      }
+    },
+    "states": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "before": { "type": "array", "items": { "type": "string" } },
+        "after": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "acceptance": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "next"],
+        "additionalProperties": false,
+        "properties": {
+          "code": { "type": "string" },
+          "next": { "type": "string" }
+        }
+      }
+    },
+    "docs": {
+      "type": "object",
+      "required": ["scenario"],
+      "additionalProperties": false,
+      "properties": {
+        "scenario": { "type": "string" },
+        "spec": { "type": "string" },
+        "modules": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "harness": {
+      "type": "object",
+      "required": ["status", "verify"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": ["not_started", "active", "blocked", "passing"]
+        },
+        "verify": { "type": "string", "minLength": 1 },
+        "blocked_reason": { "type": "string" },
+        "vcr": { "type": "boolean" }
+      }
+    }
+  }
+}

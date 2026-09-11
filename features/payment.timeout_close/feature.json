@@ -1,0 +1,65 @@
+{
+  "id": "payment.timeout_close",
+  "title": "支付超时关闭",
+  "summary": "支付单超时关闭并联动订单关单与库存释放。",
+  "status": "designed",
+  "domain": "payment",
+  "kind": "exception",
+  "priority": "P0",
+  "actors": [
+    "system"
+  ],
+  "modules": {
+    "primary": "payment",
+    "involved": [
+      "order",
+      "inventory"
+    ]
+  },
+  "depends_on": [
+    "order.create"
+  ],
+  "conflicts_with": [
+    "payment.callback"
+  ],
+  "methods": [
+    {
+      "ref": "payment.timeout_close",
+      "role": "define"
+    },
+    {
+      "ref": "order.timeout_cancel",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "created",
+      "paying"
+    ],
+    "after": [
+      "closed"
+    ]
+  },
+  "acceptance": [
+    "成功支付不会被关闭",
+    "关闭后订单与预占一致"
+  ],
+  "errors": [
+    {
+      "code": "PAYMENT_ALREADY_SUCCESS",
+      "next": "payment.callback"
+    }
+  ],
+  "docs": {
+    "scenario": "features/payment.timeout_close/SCENARIO.md",
+    "spec": "docs/compose/spec/ecommerce-scenario-routing.md",
+    "modules": [
+      "modules/payment/ROUTING.md"
+    ]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

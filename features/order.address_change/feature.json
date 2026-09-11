@@ -1,0 +1,53 @@
+{
+  "id": "order.address_change",
+  "title": "支付前改地址",
+  "summary": "pending_payment 订单修改收货地址。",
+  "status": "draft",
+  "domain": "order",
+  "kind": "variant",
+  "priority": "P1",
+  "actors": [
+    "buyer"
+  ],
+  "modules": {
+    "primary": "order",
+    "involved": [
+      "order",
+      "customer"
+    ]
+  },
+  "depends_on": [
+    "order.create",
+    "customer.address_save"
+  ],
+  "methods": [
+    {
+      "ref": "order.change_address",
+      "role": "define"
+    }
+  ],
+  "states": {
+    "before": [
+      "pending_payment"
+    ],
+    "after": [
+      "pending_payment"
+    ]
+  },
+  "acceptance": [
+    "仅未支付可改；已支付拒绝"
+  ],
+  "errors": [
+    {
+      "code": "ORDER_NOT_EDITABLE",
+      "next": "order.get"
+    }
+  ],
+  "docs": {
+    "scenario": "features/order.address_change/SCENARIO.md"
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

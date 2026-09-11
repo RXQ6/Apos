@@ -1,0 +1,47 @@
+{
+  "id": "fulfillment.partial_ship",
+  "title": "部分发货",
+  "summary": "订单内 SKU 分批发货。",
+  "status": "draft",
+  "domain": "fulfillment",
+  "kind": "variant",
+  "priority": "P1",
+  "actors": [
+    "warehouse"
+  ],
+  "modules": {
+    "primary": "fulfillment",
+    "involved": [
+      "fulfillment",
+      "order"
+    ]
+  },
+  "depends_on": [
+    "fulfillment.ship"
+  ],
+  "methods": [
+    {
+      "ref": "fulfillment.create_shipment",
+      "role": "define"
+    }
+  ],
+  "states": {
+    "before": [
+      "paid"
+    ],
+    "after": [
+      "partial_shipped"
+    ]
+  },
+  "acceptance": [
+    "子发货单齐全后订单才 completed"
+  ],
+  "errors": [],
+  "docs": {
+    "scenario": "features/fulfillment.partial_ship/SCENARIO.md"
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

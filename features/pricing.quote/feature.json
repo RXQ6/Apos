@@ -1,0 +1,67 @@
+{
+  "id": "pricing.quote",
+  "title": "结算报价",
+  "summary": "为结算页计算应付金额并生成快照。",
+  "status": "designed",
+  "domain": "pricing",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": [
+    "buyer",
+    "system"
+  ],
+  "modules": {
+    "primary": "pricing",
+    "involved": [
+      "catalog",
+      "customer"
+    ]
+  },
+  "depends_on": [
+    "customer.login",
+    "catalog.publish"
+  ],
+  "methods": [
+    {
+      "ref": "pricing.quote",
+      "role": "define"
+    },
+    {
+      "ref": "catalog.get",
+      "role": "call"
+    },
+    {
+      "ref": "customer.get",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "cart_ready"
+    ],
+    "after": [
+      "quoted"
+    ]
+  },
+  "acceptance": [
+    "输出 pay_amount 与明细可解释",
+    "快照可被 order.create 原样落库"
+  ],
+  "errors": [
+    {
+      "code": "COUPON_INVALID",
+      "next": "pricing.quote"
+    }
+  ],
+  "docs": {
+    "scenario": "features/pricing.quote/SCENARIO.md",
+    "spec": "docs/compose/spec/ecommerce-scenario-routing.md",
+    "modules": [
+      "modules/pricing/MODULE.md"
+    ]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

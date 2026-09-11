@@ -1,0 +1,37 @@
+{
+  "id": "order.get",
+  "title": "订单详情查询",
+  "summary": "买家/客服查询订单状态、金额快照与行项目。",
+  "status": "designed",
+  "domain": "order",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": ["buyer", "admin"],
+  "modules": {
+    "primary": "order",
+    "involved": ["order", "customer"]
+  },
+  "depends_on": ["order.create"],
+  "methods": [
+    { "ref": "order.get", "role": "define" }
+  ],
+  "states": {
+    "before": ["order_exists"],
+    "after": ["order_viewed"]
+  },
+  "acceptance": [
+    "仅本人或授权角色可读",
+    "金额为快照值"
+  ],
+  "errors": [
+    { "code": "FORBIDDEN", "next": "customer.login" }
+  ],
+  "docs": {
+    "scenario": "features/order.get/SCENARIO.md",
+    "modules": ["modules/order/MODULE.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

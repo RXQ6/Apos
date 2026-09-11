@@ -1,0 +1,94 @@
+{
+  "id": "order.create",
+  "title": "创建订单",
+  "summary": "买家从结算页创建待支付订单，完成在售校验、报价快照与库存预占。",
+  "status": "designed",
+  "domain": "order",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": [
+    "buyer",
+    "system"
+  ],
+  "modules": {
+    "primary": "order",
+    "involved": [
+      "catalog",
+      "inventory",
+      "pricing",
+      "customer",
+      "cart"
+    ]
+  },
+  "depends_on": [
+    "inventory.preoccupy",
+    "pricing.quote",
+    "customer.login",
+    "cart.checkout_ready"
+  ],
+  "conflicts_with": [
+    "order.timeout_cancel"
+  ],
+  "methods": [
+    {
+      "ref": "order.create",
+      "role": "define"
+    },
+    {
+      "ref": "catalog.get",
+      "role": "call"
+    },
+    {
+      "ref": "inventory.preoccupy",
+      "role": "call"
+    },
+    {
+      "ref": "pricing.quote",
+      "role": "call"
+    },
+    {
+      "ref": "customer.get",
+      "role": "call"
+    },
+    {
+      "ref": "cart.checkout_ready",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "cart_ready"
+    ],
+    "after": [
+      "pending_payment"
+    ]
+  },
+  "acceptance": [
+    "全部在售且库存预占成功后订单进入 pending_payment",
+    "订单保存报价快照，pay_amount 与 quote 一致",
+    "任一步失败则无脏单且预占回滚"
+  ],
+  "errors": [
+    {
+      "code": "STOCK_INSUFFICIENT",
+      "next": "order.create"
+    },
+    {
+      "code": "ITEM_OFF_SHELF",
+      "next": "order.create"
+    }
+  ],
+  "docs": {
+    "scenario": "features/order.create/SCENARIO.md",
+    "spec": "docs/compose/spec/ecommerce-scenario-routing.md",
+    "modules": [
+      "modules/order/MODULE.md",
+      "modules/inventory/ROUTING.md",
+      "modules/pricing/ROUTING.md"
+    ]
+  },
+  "harness": {
+    "status": "active",
+    "verify": "docs:verify; scenario:walk order.create"
+  }
+}

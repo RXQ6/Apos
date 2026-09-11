@@ -1,0 +1,72 @@
+{
+  "id": "order.timeout_cancel",
+  "title": "未支付超时关单",
+  "summary": "待支付订单超时关闭并释放库存预占。",
+  "status": "designed",
+  "domain": "order",
+  "kind": "exception",
+  "priority": "P0",
+  "actors": [
+    "system"
+  ],
+  "modules": {
+    "primary": "order",
+    "involved": [
+      "inventory",
+      "payment"
+    ]
+  },
+  "depends_on": [
+    "order.create",
+    "inventory.preoccupy"
+  ],
+  "conflicts_with": [
+    "order.create",
+    "payment.callback"
+  ],
+  "methods": [
+    {
+      "ref": "order.timeout_cancel",
+      "role": "define"
+    },
+    {
+      "ref": "inventory.release",
+      "role": "call"
+    },
+    {
+      "ref": "payment.timeout_close",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "pending_payment"
+    ],
+    "after": [
+      "closed"
+    ]
+  },
+  "acceptance": [
+    "关单后预占释放且可售恢复",
+    "已支付订单不受超时关单影响",
+    "重复调度幂等"
+  ],
+  "errors": [
+    {
+      "code": "ORDER_ALREADY_PAID",
+      "next": "payment.callback"
+    }
+  ],
+  "docs": {
+    "scenario": "features/order.timeout_cancel/SCENARIO.md",
+    "spec": "docs/compose/spec/ecommerce-scenario-routing.md",
+    "modules": [
+      "modules/order/ROUTING.md",
+      "modules/inventory/ROUTING.md"
+    ]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

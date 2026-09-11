@@ -1,0 +1,38 @@
+{
+  "id": "cart.add",
+  "title": "加入购物车",
+  "summary": "买家将可售 SKU 加入购物车，不锁库存。",
+  "status": "designed",
+  "domain": "cart",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": ["buyer", "system"],
+  "modules": {
+    "primary": "cart",
+    "involved": ["cart", "catalog"]
+  },
+  "depends_on": ["catalog.detail", "customer.login"],
+  "methods": [
+    { "ref": "cart.add", "role": "define" },
+    { "ref": "catalog.get", "role": "call" }
+  ],
+  "states": {
+    "before": ["anonymous_or_logged_in"],
+    "after": ["cart_has_line"]
+  },
+  "acceptance": [
+    "仅 on_shelf SKU 可加购",
+    "加购后库存未被预占"
+  ],
+  "errors": [
+    { "code": "ITEM_OFF_SHELF", "next": "catalog.detail" }
+  ],
+  "docs": {
+    "scenario": "features/cart.add/SCENARIO.md",
+    "modules": ["modules/cart/MODULE.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "id": "aftersale.refund_only",
+  "title": "仅退款售后",
+  "summary": "已支付订单申请仅退款，审核后原路退款并完结。",
+  "status": "designed",
+  "domain": "aftersale",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": [
+    "buyer",
+    "admin",
+    "system"
+  ],
+  "modules": {
+    "primary": "aftersale",
+    "involved": [
+      "order",
+      "payment"
+    ]
+  },
+  "depends_on": [
+    "payment.callback",
+    "order.create"
+  ],
+  "methods": [
+    {
+      "ref": "aftersale.open",
+      "role": "define"
+    },
+    {
+      "ref": "aftersale.refund_only",
+      "role": "define"
+    },
+    {
+      "ref": "payment.refund",
+      "role": "call"
+    },
+    {
+      "ref": "order.get",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "paid"
+    ],
+    "after": [
+      "aftersale_closed",
+      "refunded"
+    ]
+  },
+  "acceptance": [
+    "退款金额不超过实付",
+    "同一售后单退款幂等",
+    "无退货入库动作"
+  ],
+  "errors": [
+    {
+      "code": "AMOUNT_EXCEEDS_PAID",
+      "next": "aftersale.refund_only"
+    }
+  ],
+  "docs": {
+    "scenario": "features/aftersale.refund_only/SCENARIO.md",
+    "spec": "docs/compose/spec/ecommerce-scenario-routing.md",
+    "modules": [
+      "modules/aftersale/ROUTING.md",
+      "modules/payment/ROUTING.md"
+    ]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

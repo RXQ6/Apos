@@ -1,0 +1,51 @@
+{
+  "id": "customer.address_save",
+  "title": "保存收货地址",
+  "summary": "买家维护地址簿条目。",
+  "status": "designed",
+  "domain": "customer",
+  "kind": "happy-path",
+  "priority": "P1",
+  "actors": [
+    "buyer"
+  ],
+  "modules": {
+    "primary": "customer",
+    "involved": [
+      "customer"
+    ]
+  },
+  "depends_on": [
+    "customer.login"
+  ],
+  "methods": [
+    {
+      "ref": "customer.address_save",
+      "role": "define"
+    }
+  ],
+  "states": {
+    "before": [
+      "logged_in"
+    ],
+    "after": [
+      "address_saved"
+    ]
+  },
+  "acceptance": [
+    "地址归属本人；越权拒绝"
+  ],
+  "errors": [
+    {
+      "code": "FORBIDDEN",
+      "next": "customer.login"
+    }
+  ],
+  "docs": {
+    "scenario": "features/customer.address_save/SCENARIO.md"
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

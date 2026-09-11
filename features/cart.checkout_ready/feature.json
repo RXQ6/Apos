@@ -1,0 +1,38 @@
+{
+  "id": "cart.checkout_ready",
+  "title": "购物车结算就绪",
+  "summary": "勾选行校验通过并生成 checkout_batch，作为创建订单前置。",
+  "status": "designed",
+  "domain": "cart",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": ["buyer", "system"],
+  "modules": {
+    "primary": "cart",
+    "involved": ["cart", "catalog", "order"]
+  },
+  "depends_on": ["cart.add"],
+  "methods": [
+    { "ref": "cart.checkout_ready", "role": "define" },
+    { "ref": "cart.list", "role": "call" }
+  ],
+  "states": {
+    "before": ["cart_has_checked_lines"],
+    "after": ["checkout_batch_ready"]
+  },
+  "acceptance": [
+    "存在 checkout_batch_id",
+    "失效行不得进入 batch"
+  ],
+  "errors": [
+    { "code": "LINE_INVALID", "next": "cart.update" }
+  ],
+  "docs": {
+    "scenario": "features/cart.checkout_ready/SCENARIO.md",
+    "modules": ["modules/cart/ROUTING.md", "modules/order/ROUTING.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

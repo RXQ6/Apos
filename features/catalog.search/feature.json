@@ -1,0 +1,37 @@
+{
+  "id": "catalog.search",
+  "title": "商品搜索",
+  "summary": "按关键词/类目检索在售商品列表。",
+  "status": "designed",
+  "domain": "catalog",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": ["buyer"],
+  "modules": {
+    "primary": "catalog",
+    "involved": ["catalog"]
+  },
+  "depends_on": ["catalog.publish"],
+  "methods": [
+    { "ref": "catalog.search", "role": "define" }
+  ],
+  "states": {
+    "before": ["on_shelf_exists"],
+    "after": ["search_results"]
+  },
+  "acceptance": [
+    "默认仅返回 on_shelf",
+    "结果可分页"
+  ],
+  "errors": [
+    { "code": "EMPTY_QUERY", "next": "catalog.search" }
+  ],
+  "docs": {
+    "scenario": "features/catalog.search/SCENARIO.md",
+    "modules": ["modules/catalog/MODULE.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "id": "catalog.off_shelf",
+  "title": "商品下架",
+  "summary": "在售商品下架，下单链路不可见。",
+  "status": "draft",
+  "domain": "catalog",
+  "kind": "exception",
+  "priority": "P1",
+  "actors": [
+    "admin",
+    "system"
+  ],
+  "modules": {
+    "primary": "catalog",
+    "involved": [
+      "catalog",
+      "order"
+    ]
+  },
+  "depends_on": [
+    "catalog.publish"
+  ],
+  "methods": [
+    {
+      "ref": "catalog.get",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "on_shelf"
+    ],
+    "after": [
+      "off_shelf"
+    ]
+  },
+  "acceptance": [
+    "下架后新订单不可包含该 SKU"
+  ],
+  "errors": [
+    {
+      "code": "ITEM_OFF_SHELF",
+      "next": "order.create"
+    }
+  ],
+  "docs": {
+    "scenario": "features/catalog.off_shelf/SCENARIO.md"
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

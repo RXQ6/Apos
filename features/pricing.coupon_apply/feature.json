@@ -1,0 +1,53 @@
+{
+  "id": "pricing.coupon_apply",
+  "title": "优惠券应用",
+  "summary": "结算时应用优惠券并计入报价。",
+  "status": "draft",
+  "domain": "pricing",
+  "kind": "happy-path",
+  "priority": "P1",
+  "actors": [
+    "buyer"
+  ],
+  "modules": {
+    "primary": "pricing",
+    "involved": [
+      "pricing",
+      "customer",
+      "catalog"
+    ]
+  },
+  "depends_on": [
+    "pricing.quote"
+  ],
+  "methods": [
+    {
+      "ref": "pricing.quote",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "quoted"
+    ],
+    "after": [
+      "discounted"
+    ]
+  },
+  "acceptance": [
+    "券规则校验通过才抵扣"
+  ],
+  "errors": [
+    {
+      "code": "COUPON_INVALID",
+      "next": "pricing.quote"
+    }
+  ],
+  "docs": {
+    "scenario": "features/pricing.coupon_apply/SCENARIO.md"
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

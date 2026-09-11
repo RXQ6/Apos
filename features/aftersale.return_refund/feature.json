@@ -1,0 +1,42 @@
+{
+  "id": "aftersale.return_refund",
+  "title": "退货退款",
+  "summary": "用户寄回商品，仓收货后回库并原路退款。",
+  "status": "designed",
+  "domain": "aftersale",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": ["buyer", "warehouse", "admin", "system"],
+  "modules": {
+    "primary": "aftersale",
+    "involved": ["aftersale", "order", "fulfillment", "inventory", "payment"]
+  },
+  "depends_on": ["fulfillment.ship", "payment.callback", "order.get"],
+  "methods": [
+    { "ref": "aftersale.open", "role": "call" },
+    { "ref": "fulfillment.sign", "role": "call" },
+    { "ref": "inventory.release", "role": "call" },
+    { "ref": "payment.refund", "role": "call" }
+  ],
+  "states": {
+    "before": ["shipped", "completed"],
+    "after": ["aftersale_closed", "refunded", "stock_in"]
+  },
+  "acceptance": [
+    "必须仓收货成功后才 refund + 回库",
+    "退款与回库幂等可对账",
+    "金额不超过实付"
+  ],
+  "errors": [
+    { "code": "RETURN_NOT_RECEIVED", "next": "aftersale.return_refund" }
+  ],
+  "docs": {
+    "scenario": "features/aftersale.return_refund/SCENARIO.md",
+    "modules": ["modules/aftersale/ROUTING.md", "modules/fulfillment/ROUTING.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify",
+    "blocked_reason": ""
+  }
+}

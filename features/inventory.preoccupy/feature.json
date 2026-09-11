@@ -1,0 +1,61 @@
+{
+  "id": "inventory.preoccupy",
+  "title": "下单预占库存",
+  "summary": "为下单商品原子预占库存，支撑 order.create 超卖防护。",
+  "status": "designed",
+  "domain": "inventory",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": [
+    "system"
+  ],
+  "modules": {
+    "primary": "inventory",
+    "involved": [
+      "inventory"
+    ]
+  },
+  "depends_on": [],
+  "conflicts_with": [
+    "order.timeout_cancel"
+  ],
+  "methods": [
+    {
+      "ref": "inventory.preoccupy",
+      "role": "define"
+    },
+    {
+      "ref": "inventory.get",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "available"
+    ],
+    "after": [
+      "preoccupied"
+    ]
+  },
+  "acceptance": [
+    "可用库存不足时整体失败且不半占用",
+    "同 request_id 重复调用幂等成功"
+  ],
+  "errors": [
+    {
+      "code": "STOCK_INSUFFICIENT",
+      "next": "order.create"
+    }
+  ],
+  "docs": {
+    "scenario": "features/inventory.preoccupy/SCENARIO.md",
+    "spec": "docs/compose/spec/ecommerce-scenario-routing.md",
+    "modules": [
+      "modules/inventory/MODULE.md"
+    ]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

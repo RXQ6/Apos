@@ -1,0 +1,40 @@
+{
+  "id": "catalog.detail",
+  "title": "商品详情",
+  "summary": "展示 SPU/SKU 详情与可选规格，供加购。",
+  "status": "designed",
+  "domain": "catalog",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": ["buyer"],
+  "modules": {
+    "primary": "catalog",
+    "involved": ["catalog", "inventory", "pricing"]
+  },
+  "depends_on": ["catalog.publish"],
+  "methods": [
+    { "ref": "catalog.detail", "role": "define" },
+    { "ref": "catalog.get", "role": "call" },
+    { "ref": "inventory.get", "role": "call" },
+    { "ref": "pricing.quote", "role": "call" }
+  ],
+  "states": {
+    "before": ["search_or_link"],
+    "after": ["detail_viewed"]
+  },
+  "acceptance": [
+    "可选 SKU 与价格可见",
+    "可售提示非承诺锁库"
+  ],
+  "errors": [
+    { "code": "ITEM_OFF_SHELF", "next": "catalog.search" }
+  ],
+  "docs": {
+    "scenario": "features/catalog.detail/SCENARIO.md",
+    "modules": ["modules/catalog/MODULE.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

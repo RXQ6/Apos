@@ -1,0 +1,37 @@
+{
+  "id": "fulfillment.sign",
+  "title": "物流签收",
+  "summary": "包裹签收，订单可完结。",
+  "status": "designed",
+  "domain": "fulfillment",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": ["system", "buyer", "carrier"],
+  "modules": {
+    "primary": "fulfillment",
+    "involved": ["fulfillment", "order"]
+  },
+  "depends_on": ["fulfillment.ship"],
+  "methods": [
+    { "ref": "fulfillment.sign", "role": "define" }
+  ],
+  "states": {
+    "before": ["shipped"],
+    "after": ["signed", "completed"]
+  },
+  "acceptance": [
+    "全部发货单签收后订单 completed",
+    "部分签收订单仍 fulfilling"
+  ],
+  "errors": [
+    { "code": "SHIPMENT_NOT_SHIPPED", "next": "fulfillment.ship" }
+  ],
+  "docs": {
+    "scenario": "features/fulfillment.sign/SCENARIO.md",
+    "modules": ["modules/fulfillment/MODULE.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

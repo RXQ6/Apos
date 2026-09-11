@@ -1,0 +1,37 @@
+{
+  "id": "pricing.promo_conflict",
+  "title": "优惠冲突消解",
+  "summary": "活动价>会员价>券；默认一单一张券；不可叠加可解释拒绝。",
+  "status": "designed",
+  "domain": "pricing",
+  "kind": "exception",
+  "priority": "P1",
+  "actors": ["system", "buyer"],
+  "modules": {
+    "primary": "pricing",
+    "involved": ["pricing"]
+  },
+  "depends_on": ["pricing.coupon_apply", "pricing.quote"],
+  "methods": [
+    { "ref": "pricing.resolve_conflict", "role": "define" }
+  ],
+  "states": {
+    "before": ["multi_promo"],
+    "after": ["resolved"]
+  },
+  "acceptance": [
+    "输出 selected/rejected 与 reason_codes",
+    "优先级固定：活动价 > 会员价 > 券"
+  ],
+  "errors": [
+    { "code": "PROMO_UNRESOLVABLE", "next": "pricing.quote" }
+  ],
+  "docs": {
+    "scenario": "features/pricing.promo_conflict/SCENARIO.md",
+    "modules": ["modules/pricing/MODULE.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

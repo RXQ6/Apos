@@ -1,0 +1,53 @@
+{
+  "id": "customer.login",
+  "title": "用户登录",
+  "summary": "认证买家身份并签发会话。",
+  "status": "designed",
+  "domain": "customer",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": [
+    "buyer"
+  ],
+  "modules": {
+    "primary": "customer",
+    "involved": [
+      "customer"
+    ]
+  },
+  "depends_on": [],
+  "methods": [
+    {
+      "ref": "customer.login",
+      "role": "define"
+    }
+  ],
+  "states": {
+    "before": [
+      "anonymous"
+    ],
+    "after": [
+      "logged_in"
+    ]
+  },
+  "acceptance": [
+    "成功返回会话；失败不泄露账号是否存在（按策略）"
+  ],
+  "errors": [
+    {
+      "code": "AUTH_FAILED",
+      "next": "customer.login"
+    }
+  ],
+  "docs": {
+    "scenario": "features/customer.login/SCENARIO.md",
+    "spec": "docs/compose/spec/ecommerce-scenario-routing.md",
+    "modules": [
+      "modules/customer/MODULE.md"
+    ]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

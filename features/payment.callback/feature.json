@@ -1,0 +1,73 @@
+{
+  "id": "payment.callback",
+  "title": "支付成功回调",
+  "summary": "渠道异步通知支付成功，幂等入账并驱动订单已付与库存扣减。",
+  "status": "designed",
+  "domain": "payment",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": [
+    "payment_channel",
+    "system"
+  ],
+  "modules": {
+    "primary": "payment",
+    "involved": [
+      "order",
+      "inventory"
+    ]
+  },
+  "depends_on": [
+    "order.create"
+  ],
+  "methods": [
+    {
+      "ref": "payment.callback",
+      "role": "define"
+    },
+    {
+      "ref": "order.mark_paid",
+      "role": "call"
+    },
+    {
+      "ref": "inventory.deduct",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "paying"
+    ],
+    "after": [
+      "paid",
+      "success"
+    ]
+  },
+  "acceptance": [
+    "验签通过才处理",
+    "同渠道流水重复回调不重复扣库存、不重复发货",
+    "订单进入 paid 并可被 fulfillment 消费"
+  ],
+  "errors": [
+    {
+      "code": "SIGN_INVALID",
+      "next": "payment.callback"
+    },
+    {
+      "code": "UNKNOWN_PAYMENT",
+      "next": "payment.callback"
+    }
+  ],
+  "docs": {
+    "scenario": "features/payment.callback/SCENARIO.md",
+    "spec": "docs/compose/spec/ecommerce-scenario-routing.md",
+    "modules": [
+      "modules/payment/ROUTING.md",
+      "modules/order/ROUTING.md"
+    ]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "order.cancel",
+  "title": "用户取消订单",
+  "summary": "待支付订单由买家主动取消并释放预占。",
+  "status": "designed",
+  "domain": "order",
+  "kind": "exception",
+  "priority": "P0",
+  "actors": ["buyer", "system"],
+  "modules": {
+    "primary": "order",
+    "involved": ["order", "inventory", "payment"]
+  },
+  "depends_on": ["order.create"],
+  "conflicts_with": ["payment.callback"],
+  "methods": [
+    { "ref": "order.cancel", "role": "define" },
+    { "ref": "inventory.release", "role": "call" }
+  ],
+  "states": {
+    "before": ["pending_payment"],
+    "after": ["cancelled"]
+  },
+  "acceptance": [
+    "仅未支付可取消",
+    "取消后预占释放",
+    "与支付成功竞态以支付为准"
+  ],
+  "errors": [
+    { "code": "ORDER_ALREADY_PAID", "next": "payment.callback" }
+  ],
+  "docs": {
+    "scenario": "features/order.cancel/SCENARIO.md",
+    "modules": ["modules/order/ROUTING.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

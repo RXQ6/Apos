@@ -1,0 +1,41 @@
+{
+  "id": "payment.charge",
+  "title": "发起支付",
+  "summary": "按订单快照拉起收银台/支付方式并进入支付中。",
+  "status": "designed",
+  "domain": "payment",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": ["buyer", "system"],
+  "modules": {
+    "primary": "payment",
+    "involved": ["payment", "order"]
+  },
+  "depends_on": ["order.create"],
+  "conflicts_with": ["payment.timeout_close"],
+  "methods": [
+    { "ref": "payment.charge", "role": "define" },
+    { "ref": "payment.create", "role": "call" }
+  ],
+  "states": {
+    "before": ["pending_payment"],
+    "after": ["paying"]
+  },
+  "acceptance": [
+    "金额必须等于订单快照",
+    "可切换支付方式但金额不变",
+    "失败可重试且不双扣"
+  ],
+  "errors": [
+    { "code": "AMOUNT_MISMATCH", "next": "order.create" },
+    { "code": "ORDER_NOT_PAYABLE", "next": "order.timeout_cancel" }
+  ],
+  "docs": {
+    "scenario": "features/payment.charge/SCENARIO.md",
+    "modules": ["modules/payment/MODULE.md", "modules/payment/ROUTING.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

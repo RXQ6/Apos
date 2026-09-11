@@ -1,0 +1,39 @@
+{
+  "id": "customer.register",
+  "title": "用户注册",
+  "summary": "创建买家账号并可自动登录。",
+  "status": "designed",
+  "domain": "customer",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": ["buyer", "system"],
+  "modules": {
+    "primary": "customer",
+    "involved": ["customer"]
+  },
+  "depends_on": [],
+  "methods": [
+    { "ref": "customer.register", "role": "define" },
+    { "ref": "customer.login", "role": "call" }
+  ],
+  "states": {
+    "before": ["anonymous"],
+    "after": ["registered", "logged_in"]
+  },
+  "acceptance": [
+    "重复邮箱/手机号拒绝",
+    "密码不落明文",
+    "成功后可进入登录态"
+  ],
+  "errors": [
+    { "code": "ACCOUNT_EXISTS", "next": "customer.login" }
+  ],
+  "docs": {
+    "scenario": "features/customer.register/SCENARIO.md",
+    "modules": ["modules/customer/MODULE.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

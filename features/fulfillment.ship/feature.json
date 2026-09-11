@@ -1,0 +1,68 @@
+{
+  "id": "fulfillment.ship",
+  "title": "订单发货",
+  "summary": "对已支付订单创建/确认发货并绑定运单。",
+  "status": "designed",
+  "domain": "fulfillment",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": [
+    "warehouse",
+    "system"
+  ],
+  "modules": {
+    "primary": "fulfillment",
+    "involved": [
+      "order",
+      "catalog"
+    ]
+  },
+  "depends_on": [
+    "payment.callback",
+    "order.create"
+  ],
+  "methods": [
+    {
+      "ref": "fulfillment.create_shipment",
+      "role": "define"
+    },
+    {
+      "ref": "fulfillment.ship",
+      "role": "define"
+    },
+    {
+      "ref": "catalog.get",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "paid"
+    ],
+    "after": [
+      "fulfilling"
+    ]
+  },
+  "acceptance": [
+    "仅 paid 订单可发",
+    "运单号绑定幂等",
+    "订单状态进入 fulfilling"
+  ],
+  "errors": [
+    {
+      "code": "ORDER_NOT_PAID",
+      "next": "payment.callback"
+    }
+  ],
+  "docs": {
+    "scenario": "features/fulfillment.ship/SCENARIO.md",
+    "spec": "docs/compose/spec/ecommerce-scenario-routing.md",
+    "modules": [
+      "modules/fulfillment/ROUTING.md"
+    ]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}

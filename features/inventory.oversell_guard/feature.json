@@ -1,0 +1,37 @@
+{
+  "id": "inventory.oversell_guard",
+  "title": "超卖防护",
+  "summary": "并发预占下保证可售不为负，基于 DB 事务原子扣减。",
+  "status": "designed",
+  "domain": "inventory",
+  "kind": "exception",
+  "priority": "P0",
+  "actors": ["system"],
+  "modules": {
+    "primary": "inventory",
+    "involved": ["inventory", "order"]
+  },
+  "depends_on": ["inventory.preoccupy"],
+  "methods": [
+    { "ref": "inventory.preoccupy", "role": "define" }
+  ],
+  "states": {
+    "before": ["concurrent_preoccupy"],
+    "after": ["serialized_safe"]
+  },
+  "acceptance": [
+    "任意并发下 available 不为负",
+    "失败请求无半占用"
+  ],
+  "errors": [
+    { "code": "STOCK_INSUFFICIENT", "next": "order.create" }
+  ],
+  "docs": {
+    "scenario": "features/inventory.oversell_guard/SCENARIO.md",
+    "modules": ["modules/inventory/MODULE.md"]
+  },
+  "harness": {
+    "status": "not_started",
+    "verify": "docs:verify"
+  }
+}
