@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "typecheck": "tsc -b --pretty"
+    "typecheck": "tsc -b --pretty",
+    "smoke": "npm run build && node scripts/smoke-domain.mjs"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "^0.85.1",

@@ -6,24 +6,25 @@
 
 | 项 | 验收 | 证据 |
 |---|---|---|
-| 文档域 + Harness + 选型 + 契约 | verify | 既有 |
-| 工程①–⑥ + 推送 GitHub | commits | origin/RXQ6/Apos |
-| 闭环缺口补卡：cart.update/merge、inventory.deduct/release、payment.fail_retry、order.repay、logout、track、approve、coupon_receive | feature-list | 本批 |
-| 方法 MD：approve/return_refund/track/logout/coupon_* | modules/*/methods | 本批 |
-| Agent 产品场景：workbench、provider_config + AES 凭证层 | features/agent.* + credentials.ts | 本批 |
-| order.create L3 走读 | harness=passing | SCENARIO 走读记录 |
+| 文档域 + Harness + 选型 + 契约 + 场景补卡 | verify 39 features | 既有 |
+| 工程①–⑥ + 部分推送到 GitHub | origin | 网络曾成功 |
+| **电商最小运行时切片** | `npm run smoke -w @apos/shared` | **SMOKE PASS** |
+| order.create / inventory.preoccupy / inventory.deduct / inventory.release / order.cancel / inventory.oversell_guard | 领域代码 + 原子 SQL | `packages/shared/src/domain/` |
+| Agent 工具：seed/create/pay/cancel/stock | tools 接 db | `tools/index.ts` |
 
 ## 进行中
 
 | 项 | 当前状态 | 阻塞 |
 |---|---|---|
-| （无 active 功能项） | — | — |
+| git push | 本地可能领先 | github 连接不稳 |
+| Pi 真会话 | echo 仍在 | 需 API Key |
 
 ## 下一步
 
-1. 本机 `npm run dev` UI 走查；配 Key 后接 Pi 替换 echo  
-2. 按 feature-list 顺序推进 `agent.workbench` → `passing`  
-3. ⑦ MCP / 电商业务运行时实现  
+1. push  
+2. Electron UI 挂 domain 工具演示下单链路  
+3. 接 Pi Key  
+4. 横向铺 payment.callback / cart 服务化  
 
 ## 当前分支
 

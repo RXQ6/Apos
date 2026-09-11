@@ -47,6 +47,7 @@ function ensureRunner(sessionId: string) {
     repoRoot,
     sessionsRoot: paths.sessionsDir,
     permissionMode: mode,
+    db,
   });
   runner.on("event", (evt) => {
     win?.webContents.send("apos:agent-event", evt);

@@ -1,5 +1,14 @@
 import type { PermissionMode } from "../types.js";
 import { listFeatures, activeFeature } from "../features.js";
+import type { AposDb } from "../db/sqlite.js";
+import {
+  cancelOrder,
+  createOrder,
+  DomainError,
+  getStock,
+  markPaidAndDeduct,
+  upsertSku,
+} from "../domain/index.js";
 
 export interface ToolResult {
   ok: boolean;
@@ -14,7 +23,6 @@ export interface ToolContext {
 export interface ToolSpec {
   name: string;
   description: string;
-  /** true → blocked in explore mode */
   writes: boolean;
 }
 
@@ -24,9 +32,23 @@ interface ToolImpl extends ToolSpec {
 
 export interface ToolRegistryOptions {
   repoRoot: string;
+  /** When set, domain tools (order/inventory) are available. */
+  db?: AposDb;
+}
+
+function parseJsonArgs(argText: string): Record<string, unknown> {
+  const t = argText.trim();
+  if (!t) return {};
+  try {
+    return JSON.parse(t) as Record<string, unknown>;
+  } catch {
+    throw new DomainError("BAD_ARGS", `expect JSON args, got: ${t.slice(0, 80)}`);
+  }
 }
 
 export function createToolRegistry(opts: ToolRegistryOptions) {
+  const db = opts.db;
+
   const tools: ToolImpl[] = [
     {
       name: "echo",
@@ -36,7 +58,7 @@ export function createToolRegistry(opts: ToolRegistryOptions) {
     },
     {
       name: "feature_list_read",
-      description: "Read features/*/feature.json summaries",
+      description: "Read features summaries",
       writes: false,
       run: () => {
         const features = listFeatures(opts.repoRoot);
@@ -73,20 +95,95 @@ export function createToolRegistry(opts: ToolRegistryOptions) {
     },
     {
       name: "progress_update",
-      description: "Append a line to PROGRESS.md (write tool)",
+      description: "Append a line to PROGRESS.md",
       writes: true,
       run: async (argText) => {
-        if (!argText.trim()) return { ok: false, error: "usage: /progress_update <note>" };
+        if (!argText.trim()) {
+          return { ok: false, error: "usage: /progress_update <note>" };
+        }
         const { appendFileSync } = await import("node:fs");
-        const path = `${opts.repoRoot}/PROGRESS.md`;
-        appendFileSync(path, `\n- [agent] ${argText.trim()}\n`, "utf8");
-        return { ok: true, output: `appended to PROGRESS.md: ${argText.trim()}` };
+        appendFileSync(
+          `${opts.repoRoot}/PROGRESS.md`,
+          `\n- [agent] ${argText.trim()}\n`,
+          "utf8",
+        );
+        return { ok: true, output: `appended: ${argText.trim()}` };
+      },
+    },
+    {
+      name: "inventory_seed",
+      description: "Seed/upsert SKU inventory. JSON: {skuId,title,priceCents,onHand}",
+      writes: true,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        const skuId = String(a.skuId ?? a.id ?? "");
+        if (!skuId) return { ok: false, error: "skuId required" };
+        const sku = upsertSku(db, {
+          id: skuId,
+          title: String(a.title ?? skuId),
+          priceCents: Number(a.priceCents ?? 0),
+          onHand: a.onHand === undefined ? undefined : Number(a.onHand),
+        });
+        const stock = getStock(db, sku.id);
+        return { ok: true, output: JSON.stringify({ sku, stock }, null, 2) };
+      },
+    },
+    {
+      name: "inventory_get",
+      description: "Get stock. JSON: {skuId}",
+      writes: false,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        const stock = getStock(db, String(a.skuId ?? a.id ?? ""));
+        return { ok: true, output: JSON.stringify(stock, null, 2) };
+      },
+    },
+    {
+      name: "order_create",
+      description:
+        'Create order. JSON: {customerId, items:[{skuId,qty}]} → quote+preoccupy+pending',
+      writes: true,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        const items = (a.items as Array<{ skuId: string; qty: number }> | undefined) ?? [];
+        const order = createOrder(db, {
+          customerId: String(a.customerId ?? "guest"),
+          items,
+          address: a.address,
+        });
+        return { ok: true, output: JSON.stringify(order, null, 2) };
+      },
+    },
+    {
+      name: "order_pay",
+      description: "Mark paid + deduct stock. JSON: {orderId}",
+      writes: true,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        const order = markPaidAndDeduct(db, String(a.orderId ?? ""));
+        return { ok: true, output: JSON.stringify(order, null, 2) };
+      },
+    },
+    {
+      name: "order_cancel",
+      description: "Cancel pending order + release stock. JSON: {orderId}",
+      writes: true,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        const order = cancelOrder(db, String(a.orderId ?? ""), "user");
+        return { ok: true, output: JSON.stringify(order, null, 2) };
       },
     },
   ];
 
   return {
-    list: () => tools.map(({ name, description, writes }) => ({ name, description, writes })),
+    list: () =>
+      tools.map(({ name, description, writes }) => ({ name, description, writes })),
     has: (name: string) => tools.some((t) => t.name === name),
     async invoke(name: string, argText: string, ctx: ToolContext): Promise<ToolResult> {
       const tool = tools.find((t) => t.name === name);
@@ -94,7 +191,14 @@ export function createToolRegistry(opts: ToolRegistryOptions) {
       if (tool.writes && ctx.mode === "explore") {
         return { ok: false, error: `explore mode blocks write tool ${name}` };
       }
-      return tool.run(argText);
+      try {
+        return await tool.run(argText);
+      } catch (err) {
+        if (err instanceof DomainError) {
+          return { ok: false, error: `${err.code}: ${err.message}` };
+        }
+        return { ok: false, error: err instanceof Error ? err.message : String(err) };
+      }
     },
   };
 }

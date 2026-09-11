@@ -2,11 +2,13 @@ import { EventEmitter } from "node:events";
 import type { ChatMessage, PermissionMode } from "../types.js";
 import { appendSessionJsonl } from "../session.js";
 import { createToolRegistry, type ToolResult, type ToolSpec } from "../tools/index.js";
+import type { AposDb } from "../db/sqlite.js";
 
 export interface RunnerOptions {
   repoRoot: string;
   sessionsRoot: string;
   permissionMode?: PermissionMode;
+  db?: AposDb;
   /** When true, tools that write files are blocked unless mode is allow-all. */
   requireAskForWrites?: boolean;
 }
@@ -34,7 +36,7 @@ export class AposAgentRunner extends EventEmitter {
     this.sessionId = sessionId;
     this.mode = opts.permissionMode ?? "ask";
     this.sessionsRoot = opts.sessionsRoot;
-    this.tools = createToolRegistry({ repoRoot: opts.repoRoot });
+    this.tools = createToolRegistry({ repoRoot: opts.repoRoot, db: opts.db });
   }
 
   setMode(mode: PermissionMode): void {
