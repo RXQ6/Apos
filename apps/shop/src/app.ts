@@ -51,6 +51,25 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+function resolvePublicDir(explicit?: string): string {
+  const candidates = [
+    explicit,
+    process.env.APOS_SHOP_PUBLIC,
+    join(__dirname, "..", "public"),
+    join(__dirname, "public"),
+    // monorepo / electron esbuild bundle locations
+    join(__dirname, "..", "..", "..", "shop", "public"),
+    join(__dirname, "..", "..", "..", "..", "shop", "public"),
+    join(__dirname, "..", "..", "..", "..", "..", "apps", "shop", "public"),
+    join(process.cwd(), "apps", "shop", "public"),
+    join(process.cwd(), "public"),
+  ].filter(Boolean) as string[];
+  for (const dir of candidates) {
+    if (existsSync(join(dir, "index.html"))) return dir;
+  }
+  return explicit ?? join(__dirname, "..", "public");
+}
+
 type Env = {
   Variables: {
     db: AposDb;
@@ -144,7 +163,7 @@ function requireOrderOwner(db: AposDb, orderId: string, customerId: string): voi
 
 export function createShopApp(db: AposDb, opts?: { publicDir?: string }): Hono<Env> {
   const app = new Hono<Env>();
-  const publicDir = opts?.publicDir ?? join(__dirname, "..", "public");
+  const publicDir = resolvePublicDir(opts?.publicDir);
 
   app.use("*", async (c, next) => {
     c.set("db", db);

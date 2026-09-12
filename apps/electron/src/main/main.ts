@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { join, dirname } from "node:path";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
   AposAgentRunner,
@@ -167,9 +168,24 @@ ipcMain.handle("apos:list-features", async () => listFeatures(repoRoot));
 function ensureShopServer() {
   if (shop) return shop;
   try {
-    shop = startShopServer(db, { port: shopPort });
+    const publicDirCandidates = [
+      process.env.APOS_SHOP_PUBLIC,
+      join(repoRoot, "apps", "shop", "public"),
+      join(__dirname, "..", "..", "..", "..", "shop", "public"),
+      join(__dirname, "..", "..", "..", "shop", "public"),
+      join(__dirname, "..", "shop-public"),
+    ].filter(Boolean) as string[];
+    const publicDir =
+      publicDirCandidates.find((d) => {
+        try {
+          return existsSync(join(d, "index.html"));
+        } catch {
+          return false;
+        }
+      }) ?? undefined;
+    shop = startShopServer(db, { port: shopPort, publicDir });
     shopPort = shop.port;
-    log("shop server", `http://127.0.0.1:${shopPort}`);
+    log("shop server", `http://127.0.0.1:${shopPort}`, { publicDir });
     return shop;
   } catch (err) {
     log("shop server failed (maybe port busy)", err);
