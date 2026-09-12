@@ -62,6 +62,22 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const DEMO_IMAGE: Record<string, string> = {
+  sku_tea: "/images/sku_tea.png",
+  sku_cup: "/images/sku_cup.png",
+  sku_tray: "/images/sku_tray.png",
+};
+
+function withImage(row: {
+  skuId?: string;
+  spuId?: string;
+  id?: string;
+  title?: string;
+} & Record<string, unknown>) {
+  const key = String(row.skuId ?? row.id ?? "");
+  return { ...row, image: DEMO_IMAGE[key] ?? null };
+}
+
 function resolvePublicDir(explicit?: string): string {
   const candidates = [
     explicit,
@@ -411,13 +427,24 @@ export function createShopApp(
       const q = c.req.query("q");
       const page = c.req.query("page");
       const pageSize = c.req.query("pageSize");
-      return c.json(
-        catalogSearch(db, {
-          q: q || undefined,
-          page: page ? Number(page) : undefined,
-          pageSize: pageSize ? Number(pageSize) : undefined,
-        }),
-      );
+      const list = catalogSearch(db, {
+        q: q || undefined,
+        page: page ? Number(page) : undefined,
+        pageSize: pageSize ? Number(pageSize) : undefined,
+      });
+      const withImg = list.map((p) => {
+        const sku = db
+          .prepare(
+            `SELECT id FROM sku WHERE spu_id = ? AND status = 'on_shelf' LIMIT 1`,
+          )
+          .get(p.spuId) as { id: string } | undefined;
+        return {
+          ...p,
+          image: sku ? DEMO_IMAGE[sku.id] ?? null : null,
+          skuId: sku?.id ?? null,
+        };
+      });
+      return c.json(withImg);
     } catch (e) {
       return jsonError(c, e);
     }
@@ -425,7 +452,11 @@ export function createShopApp(
 
   app.get("/api/catalog/spus/:id", (c) => {
     try {
-      return c.json(catalogDetail(db, c.req.param("id")));
+      const d = catalogDetail(db, c.req.param("id"));
+      return c.json({
+        ...d,
+        image: d.skus?.[0] ? DEMO_IMAGE[d.skus[0].id] ?? null : null,
+      });
     } catch (e) {
       return jsonError(c, e);
     }
@@ -875,6 +906,30 @@ export function createShopApp(
     } catch (e) {
       return jsonError(c, e);
     }
+  });
+
+  // static assets from public/
+  app.get("/images/*", (c) => {
+    const rel = c.req.path.replace(/^\/+/, "");
+    const safe = rel.replace(/\.\./g, "");
+    const filePath = join(publicDir, safe);
+    if (!existsSync(filePath)) return c.text("not found", 404);
+    const ext = filePath.split(".").pop()?.toLowerCase();
+    const type =
+      ext === "png"
+        ? "image/png"
+        : ext === "jpg" || ext === "jpeg"
+          ? "image/jpeg"
+          : ext === "webp"
+            ? "image/webp"
+            : ext === "svg"
+              ? "image/svg+xml"
+              : ext === "css"
+                ? "text/css"
+                : ext === "js"
+                  ? "application/javascript"
+                  : "application/octet-stream";
+    return c.body(readFileSync(filePath), 200, { "Content-Type": type });
   });
 
   // static storefront

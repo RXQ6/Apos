@@ -212,8 +212,33 @@
       </div>
       <div class="msgs" id="msgs">
         <div class="empty" id="welcome">
-          <strong>电商场景规划智能工作台</strong>
-          对话驱动：列场景、跑工具、推进 harness。无 API Key 时走 echo + 本地工具。
+          <strong>景枢 · 电商场景规划智能工作台</strong>
+          <div style="max-width:520px;margin:12px auto 0;text-align:left;line-height:1.7">
+            Agent 读写的是<strong>真实电商内核</strong>（与小店同库），不是空聊。
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;max-width:640px;margin:16px auto 0;text-align:left">
+            <div style="padding:12px;border:1px solid var(--line);border-radius:12px">
+              <div style="color:#8fbfad;font-family:var(--font-display)">场景资产</div>
+              <div style="font-size:12px;margin-top:4px">40 个可验收场景，harness 可跑</div>
+            </div>
+            <div style="padding:12px;border:1px solid var(--line);border-radius:12px">
+              <div style="color:#8fbfad;font-family:var(--font-display)">业务执行</div>
+              <div style="font-size:12px;margin-top:4px">上架/下单/支付/库存立刻生效</div>
+            </div>
+            <div style="padding:12px;border:1px solid var(--line);border-radius:12px">
+              <div style="color:#8fbfad;font-family:var(--font-display)">权限治理</div>
+              <div style="font-size:12px;margin-top:4px">explore 禁写，allow-all 全开</div>
+            </div>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+            <button class="btn sm" data-sample="列出场景">列出场景</button>
+            <button class="btn sm" data-sample="搜索红茶">搜索红茶</button>
+            <button class="btn sm" data-sample="上架商品 标题=龙井 价格=5900 库存=10">上架商品</button>
+            <button class="btn sm" data-sample="创建订单 用户=guest-web sku=sku_tea 数量=1">创建订单</button>
+            <button class="btn sm" data-sample="查库存 sku=sku_tea">查库存</button>
+            <button class="btn sm" data-sample="跑验证">跑验证</button>
+          </div>
+          <p style="margin-top:14px;font-size:12px">配 API Key 可自然语言规划；未配置时点上面按钮直接驱动内核。</p>
         </div>
       </div>
       <form class="composer" id="form">
@@ -394,7 +419,14 @@
     };
 
     bootstrap().catch((e) => {
-      $("msgs").innerHTML = `<div class="empty"><strong>无法连接服务</strong>${esc(e.message)}<div style="margin-top:12px">请先运行 <code>npm.cmd run shop</code></div></div>`;
+      $("msgs").innerHTML = `<div class="empty"><strong>无法连接服务</strong>${esc(e.message)}<div style="margin-top:12px">请先运行 <code>npm.cmd run web</code></div></div>`;
+    });
+
+    $("msgs").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-sample]");
+      if (!b) return;
+      $("input").value = b.dataset.sample;
+      $("form").dispatchEvent(new Event("submit", { cancelable: true }));
     });
   </script>
 </body>

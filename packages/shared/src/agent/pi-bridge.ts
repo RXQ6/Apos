@@ -119,9 +119,76 @@ export class AposPiBridge extends EventEmitter {
       return;
     }
 
+    // Local intent router so the web workbench is useful without an API key.
+    const intent = this.matchIntent(trimmed);
+    if (intent) {
+      await this.runTool(intent.name, intent.args);
+      return;
+    }
+
     await this.streamText(
-      `（echo，未配置 LLM）已收到：${trimmed}\n可先在设置里保存 Provider Key，或使用 /feature_list_read、/order_create 等工具。`,
+      `（本地模式，未配置 LLM）已收到：${trimmed}\n\n` +
+        `可直接说：\n` +
+        `· 列出场景 / 查看 harness\n` +
+        `· 搜索红茶\n` +
+        `· 上架商品 标题=龙井 价格=5900 库存=10\n` +
+        `· 创建订单 用户=cus_x sku=sku_tea 数量=1\n` +
+        `· 沙箱支付 支付单=pay_xxx\n` +
+        `· 跑验证\n` +
+        `或使用斜杠工具：/feature_list_read /catalog_search …`,
     );
+  }
+
+  private matchIntent(text: string): { name: string; args: string } | null {
+    const t = text.replace(/\s+/g, "");
+    if (/^(列出)?场景|功能清单|harness|feature/i.test(text) || t.includes("列出场景")) {
+      return { name: "feature_list_read", args: "" };
+    }
+    if (/验证|verify/i.test(text) && !/支付/.test(text)) {
+      return { name: "verify_run", args: "" };
+    }
+    const search = text.match(/搜索\s*(.+)/) || text.match(/查找\s*(.+)/);
+    if (search?.[1]) {
+      return { name: "catalog_search", args: JSON.stringify({ q: search[1].trim() }) };
+    }
+    if (/上架|发布商品|新建商品/.test(text)) {
+      const title = text.match(/标题[=:：]?\s*([^\s]+)/)?.[1] ?? text.match(/上架\s*([^\s]+)/)?.[1] ?? "新商品";
+      const price = Number(text.match(/价格[=:：]?\s*(\d+)/)?.[1] ?? 1000);
+      const stock = text.match(/库存[=:：]?\s*(\d+)/)?.[1];
+      return {
+        name: "catalog_publish",
+        args: JSON.stringify({
+          title,
+          priceCents: price,
+          onHand: stock ? Number(stock) : 5,
+        }),
+      };
+    }
+    const order = text.match(/创建订单|下单/);
+    if (order) {
+      const customer = text.match(/用户[=:：]\s*([^\s]+)/)?.[1] ?? "guest-web";
+      const sku = text.match(/sku[=:：]\s*([^\s]+)/)?.[1] ?? "sku_tea";
+      const qty = Number(text.match(/数量[=:：]?\s*(\d+)/)?.[1] ?? 1);
+      return {
+        name: "order_create",
+        args: JSON.stringify({ customerId: customer, items: [{ skuId: sku, qty }] }),
+      };
+    }
+    const pay = text.match(/沙箱支付|支付成功|完成支付/);
+    if (pay) {
+      const paymentId = text.match(/支付单[=:：]?\s*([^\s]+)/)?.[1] ?? text.match(/(pay_[a-z0-9_]+)/i)?.[1];
+      if (paymentId) {
+        return { name: "payment_sandbox_settle", args: JSON.stringify({ paymentId }) };
+      }
+    }
+    if (/库存/.test(text)) {
+      const sku = text.match(/sku[=:：]\s*([^\s]+)/)?.[1] ?? "sku_tea";
+      return { name: "inventory_get", args: JSON.stringify({ skuId: sku }) };
+    }
+    if (/种子|演示商品/.test(text)) {
+      return { name: "inventory_seed", args: JSON.stringify({ skuId: "sku_demo", title: "演示茶", priceCents: 990, onHand: 8 }) };
+    }
+    return null;
   }
 
   private async runTool(name: string, argText: string): Promise<void> {
