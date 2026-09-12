@@ -5,9 +5,10 @@
 
 ## 产品形态
 
-- **形态 A**：Electron「电商场景规划工作台」，由 **Pi Agent** 驱动
+- **主形态（2026-09-12 用户拍板）**：**纯网页版** — Hono 单进程提供 Agent 工作台 `/workbench` + 购物小店 `/`
+- Electron 降为可选桌面壳（非主路径）
 - 权威数据仍是文档路由：`AGENTS.md` / `features/` / `modules/`；SQLite/JSONL 为镜像与运行态
-- 不做通用 Agent 壳；第一期不做 headless server / MCP Sources / CLI（接口可预留）
+- 不做通用 Agent 壳；第一期不做 MCP Sources / CLI（接口可预留）
 
 ## 栈一览
 

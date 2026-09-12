@@ -6,12 +6,10 @@
 
 | 项 | 验收 | 证据 |
 |---|---|---|
-| 全场景 40/40 passing | verify PASS | feature-list |
-| **Electron 内嵌小店** | esbuild + IPC open-shop | apps/electron main |
-| **支付渠道适配层** | vitest channels 4 | payment-channels.ts |
-| **前台完整精美 UI** | SPA 全链路 | apps/shop/public/index.html |
-| **Electron 工作台视觉对齐** | 玉色深墨主题 | styles.css |
-| **安装包脚本 + README** | electron-builder.yml | `npm.cmd run dist:electron` |
+| 全场景 40/40 + domain/shop 测试 | gate PASS | feature-list |
+| **纯网页主产品** | `/workbench` + `/` | `npm.cmd run web` |
+| 支付沙箱 / 超时重试 / 报价券 | vitest | packages/shared |
+| Electron | 仅可选桌面壳 | apps/electron |
 
 ## 进行中
 
@@ -19,14 +17,13 @@
 |---|---|---|
 | （无） | — | — |
 
-## 下一步（可选）
+## 下一步
 
-1. 真实商户密钥写入 `payment.alipay.config` / `payment.wechat.config`  
-2. 本机执行 `npm.cmd run dist:electron` 产出安装包  
-3. Electron 生产环境打包 shop public 路径微调  
+1. 浏览器打开 `http://127.0.0.1:8787/workbench` 使用  
+2. 可选：真支付商户密钥  
+3. 可选：部署到服务器（Node + 反代）  
 
 ## 当前分支
 
 - `feat/ecommerce-scenario-routing`
-- 门禁：`npm.cmd run gate`
-- 小店：Electron 内嵌或 `npm.cmd run shop`
+- 主命令：`npm.cmd run web` → 8787

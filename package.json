@@ -2,7 +2,7 @@
   "name": "apos",
   "private": true,
   "version": "0.1.0",
-  "description": "Apos（景枢）— 电商场景规划智能工作台",
+  "description": "Apos（景枢）— 网页版电商场景规划智能工作台",
   "type": "module",
   "workspaces": [
     "packages/*",
@@ -17,11 +17,13 @@
     "test": "npm test -w @apos/shared && npm test -w @apos/shop",
     "smoke": "npm run smoke -w @apos/shared",
     "gate": "npm run verify && npm run build:shared && npm run smoke && npm run test",
-    "dev": "npm run dev -w @apos/electron",
-    "shop": "npm run build -w @apos/shared && npm run dev -w @apos/shop",
+    "web": "npm run build -w @apos/shared && npm run build -w @apos/shop && node apps/shop/dist/server.js",
+    "dev": "npm run web",
+    "start": "npm run web",
+    "shop": "npm run web",
     "build:shared": "npm run build -w @apos/shared",
-    "build:electron": "npm run build -w @apos/electron",
     "build:shop": "npm run build -w @apos/shop",
+    "build:electron": "npm run build -w @apos/electron",
     "dist:electron": "npm run build:shared && npm run build -w @apos/shop && npm run build -w @apos/electron && npm run dist -w @apos/electron"
   },
   "devDependencies": {

@@ -1,77 +1,55 @@
 # Apos（景枢）
 
-电商**场景规划智能工作台** + 可验证 domain 内核 + 最小购物前台（沙箱支付）。
+**网页版**电商场景规划智能工作台 + 可验证 domain 内核 + 购物小店（沙箱支付）。
 
-## 首次运行
+## 启动（只需浏览器）
 
 ```bash
 npm install
-# Electron 二进制若下载失败（GitHub 超时）：
-# $env:ELECTRON_MIRROR="https://npmmirror.com/mirrors/electron/"
-# npm install electron --workspace=@apos/electron
-
-npm.cmd run gate          # verify + smoke + tests
-npm.cmd run shop          # 小店 http://127.0.0.1:8787
-npm.cmd run dev           # Electron 工作台（内嵌启动小店）
+npm.cmd run gate          # 可选：结构/测试
+npm.cmd run web           # 或 npm.cmd run dev / start
 ```
 
-配置根：`~/.apos/`（`data.db` + `sessions/`）。
+打开：
 
-## 小店闭环
+| 页面 | 地址 |
+|---|---|
+| Agent 工作台 | http://127.0.0.1:8787/workbench |
+| 购物小店 | http://127.0.0.1:8787/ |
 
-1. 打开 `http://127.0.0.1:8787`（或 Electron 侧栏「打开小店」）
-2. 「种子数据」→ 注册/登录 → 加购 → 创建订单 → 沙箱支付
-3. 可选：地址簿、演示券 OFF100、物流轨迹查询
+配置根：`~/.apos/`（SQLite + 会话）。
 
-## 网页版工作台（Agent）
+### 工作台
 
-纯浏览器即可，无需 Electron：
+- 场景列表与 harness 状态  
+- 权限 explore / ask / allow-all  
+- 会话、对话 Agent（无 API Key 为 echo+本地工具）  
+- 模型设置（Provider / Key）  
 
-```bash
-npm.cmd run shop
-# 打开 http://127.0.0.1:8787/workbench
-```
+### 小店
 
-- 场景列表 / 权限三档 / 会话 / 对话（无 Key 为 echo+工具）
-- 模型设置保存 Provider；小店入口在顶栏
+选物 → 购物车 → 报价（活动价›会员价›券）→ 沙箱支付 → 订单/物流。
 
 ## 目录
 
 ```text
-apps/electron     工作台（Agent + 内嵌 shop）
-apps/shop         Hono API + 静态前台
-packages/shared   domain / tools / db / channels
+apps/shop         网页主产品（Hono + SPA）
+apps/electron     可选桌面壳（非必须）
+packages/shared   domain / agent / tools / db
 features/ modules/ docs/   文档权威域
 ```
 
-## 支付渠道
-
-| 渠道 | 状态 |
-|---|---|
-| sandbox | 默认；HMAC 验签回调 |
-| alipay / wechat | 适配层预留；配置 `app_settings` 键 `payment.alipay.config` / `payment.wechat.config`（JSON：`merchantId`,`secret`）后可 charge；公网回调需自备 |
+## 可选：桌面壳
 
 ```bash
-# 列出渠道
-curl http://127.0.0.1:8787/api/payments/channels
+npm.cmd run build:electron
+# cd apps/electron && npx electron dist/main/main.js
 ```
-
-## 安装包（可选）
-
-```bash
-npm install
-npm.cmd run build:shared
-npm.cmd run build -w @apos/shop
-npm.cmd run build -w @apos/electron
-npm.cmd run dist -w @apos/electron   # 产出 apps/electron/dist-electron
-```
-
-Windows NSIS / macOS DMG / Linux AppImage 由 electron-builder 生成。首次打包需下载 Electron 发行物，可用镜像环境变量。
 
 ## 门禁
 
 ```bash
-npm.cmd run gate   # verify 40/40 + smoke + vitest
+npm.cmd run gate
 ```
 
 文档入口：`AGENTS.md`。
