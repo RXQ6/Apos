@@ -3,7 +3,7 @@ feature: payment-sandbox
 status: delivered
 updated: 2026-09-11
 branch: feat/ecommerce-scenario-routing
-commits: # filled at delivery
+commits: 023f8cd..3d89d48
 ---
 
 # 支付沙箱（替换 mock payment.callback）
