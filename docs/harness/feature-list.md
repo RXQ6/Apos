@@ -58,6 +58,7 @@
 | aftersale.approve | 售后审核 | P0 | not_started | docs:verify | `features/aftersale.approve/` |
 | aftersale.refund_only | 仅退款 | P0 | passing | docs:verify | `features/aftersale.refund_only/` |
 | aftersale.return_refund | 退货退款 | P0 | passing | docs:verify | `features/aftersale.return_refund/` |
+| shop.http_storefront | HTTP API + 最小购物前台 | P0 | passing | docs:verify + API 测试 | `features/shop.http_storefront/` |
 
 ## 验证命令约定
 

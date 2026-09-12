@@ -29,3 +29,4 @@
 | 2026-09-11 | E 后置：MCP/秒杀/跨境/复杂促销/完整安装包 | 见 PROGRESS |
 | 2026-09-11 | 支付入账唯一口 `receiveChannelCallback`（HMAC 验签后）；`sandboxSettle` 模拟渠道 | 闭环 payment.callback 验收「验签通过才处理」；HTTP 属选项 B |
 | 2026-09-11 | 沙箱密钥：settings `payment.sandbox.secret` / 默认 `apos-sandbox-dev-secret` | 本机可跑通且可覆盖；不接真实渠道 |
+| 2026-09-11 | 落地入口 `apps/shop`（Hono+静态前台），业务仍走 shared domain | 把内核变成可点闭环；不旁路库存/支付规则 |

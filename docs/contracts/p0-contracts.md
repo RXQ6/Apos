@@ -39,6 +39,10 @@
 | POST | `/internal/fulfillments/:id/ship` | fulfillment.ship | |
 | POST | `/internal/fulfillments/:id/sign` | fulfillment.sign | |
 | POST | `/internal/aftersales/:id/return-received` | 收货事件 | 触发回库+退款 |
+| POST | `/api/payments/:id/sandbox-settle` | payment.callback | 沙箱演示入口（apps/shop） |
+| POST | `/api/admin/seed-demo` | — | 本地演示商品种子（apps/shop） |
+
+> 实现入口：`apps/shop`（Hono）。业务路径统一挂 `/api` 前缀；静态前台 `/`。
 
 ---
 

@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Apos 景枢小店</title>
+  <style>
+    :root {
+      --bg: #f6f1e7;
+      --ink: #1c1917;
+      --muted: #78716c;
+      --card: #fffdf8;
+      --line: #e7e0d4;
+      --accent: #0f766e;
+      --accent-2: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      background: radial-gradient(circle at top left, #efe6d6, var(--bg));
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,253,248,.8);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+    }
+    .brand { font-weight: 700; letter-spacing: .04em; }
+    .brand span { color: var(--accent); }
+    .auth, .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+      display: grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap: 20px;
+    }
+    @media (max-width: 860px) {
+      main { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+    }
+    h1, h2 { margin: 0 0 12px; font-size: 1.15rem; }
+    input, button, select {
+      font: inherit;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+    }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .price { color: var(--accent-2); font-weight: 700; }
+    .muted { color: var(--muted); font-size: .9rem; }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--line);
+    }
+    .log {
+      margin-top: 12px;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      background: #111827;
+      color: #d1fae5;
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 72px;
+    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .pill.on { background: var(--accent); color: white; border-color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Apos <span>景枢小店</span></div>
+    <div class="auth">
+      <input id="account" placeholder="账号" value="buyer@apos.local" />
+      <input id="password" type="password" placeholder="密码（≥6）" value="secret1" />
+      <button id="btnRegister" class="secondary">注册</button>
+      <button id="btnLogin">登录</button>
+      <span class="pill" id="authPill">游客</span>
+    </div>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="tabs">
+        <span class="pill on">商品</span>
+        <input id="q" placeholder="搜索商品" style="flex:1" />
+        <button id="btnSearch" class="secondary">搜索</button>
+        <button id="btnSeed" class="secondary">种子数据</button>
+      </div>
+      <div id="products" class="grid"></div>
+      <div class="log" id="log">就绪。先点「种子数据」，再登录加购。</div>
+    </section>
+    <aside class="panel">
+      <h2>购物车 / 订单</h2>
+      <div id="cart"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button id="btnCheckoutReady" class="secondary">结算校验</button>
+        <button id="btnCreateOrder">创建订单</button>
+      </div>
+      <div id="orderBox" style="margin-top:16px"></div>
+    </aside>
+  </main>
+  <script>
+    const state = {
+      token: localStorage.getItem("apos_token") || "",
+      guestId: localStorage.getItem("apos_guest") || `g_${Math.random().toString(36).slice(2, 8)}`,
+      customerId: localStorage.getItem("apos_cid") || "",
+      cart: null,
+      lastOrderId: "",
+      lastPaymentId: "",
+    };
+    localStorage.setItem("apos_guest", state.guestId);
+
+    const $ = (id) => document.getElementById(id);
+    const logEl = $("log");
+
+    function log(msg, data) {
+      const line = typeof data === "undefined" ? msg : `${msg}\n${JSON.stringify(data, null, 2)}`;
+      logEl.textContent = line;
+      console.log(msg, data);
+    }
+
+    function authPill() {
+      $("authPill").textContent = state.token
+        ? `已登录 ${state.customerId || ""}`.trim()
+        : `游客 ${state.guestId}`;
+    }
+
+    async function api(path, options = {}) {
+      const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
+      if (state.token) headers.Authorization = `Bearer ${state.token}`;
+      if (!state.token || path.startsWith("/api/auth/")) headers["X-Guest-Id"] = state.guestId;
+      const res = await fetch(path, { ...options, headers });
+      const text = await res.text();
+      let data;
+      try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
+      if (!res.ok) {
+        const err = new Error(data?.message || res.statusText);
+        err.code = data?.code || "HTTP_" + res.status;
+        err.status = res.status;
+        err.data = data;
+        throw err;
+      }
+      return data;
+    }
+
+    function yuan(cents) {
+      return `¥${(Number(cents || 0) / 100).toFixed(2)}`;
+    }
+
+    async function loadProducts() {
+      const q = $("q").value.trim();
+      const list = await api(`/api/catalog/search${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+      const root = $("products");
+      root.innerHTML = "";
+      if (!list.length) {
+        root.innerHTML = `<div class="muted">暂无商品，点「种子数据」</div>`;
+        return;
+      }
+      for (const item of list) {
+        const el = document.createElement("div");
+        el.className = "card";
+        el.innerHTML = `
+          <div><strong>${item.title}</strong></div>
+          <div class="price">${yuan(item.priceFromCents)} 起</div>
+          <div class="muted">${item.spuId}</div>
+          <button data-spu="${item.spuId}">查看并加购</button>
+        `;
+        el.querySelector("button").onclick = () => openDetail(item.spuId);
+        root.appendChild(el);
+      }
+    }
+
+    async function openDetail(spuId) {
+      const detail = await api(`/api/catalog/spus/${spuId}`);
+      const sku = (detail.skus || []).find((s) => s.status === "on_shelf") || detail.skus?.[0];
+      if (!sku) {
+        log("无在售 SKU", detail);
+        return;
+      }
+      const cart = await api("/api/cart/items", {
+        method: "POST",
+        body: JSON.stringify({ skuId: sku.id, qty: 1 }),
+      });
+      state.cart = cart;
+      renderCart();
+      log(`已加购 ${detail.spu.title} / ${sku.id}`, cart);
+    }
+
+    function renderCart() {
+      const cart = state.cart;
+      const box = $("cart");
+      if (!cart || !cart.lines?.length) {
+        box.innerHTML = `<div class="muted">购物车为空</div>`;
+        return;
+      }
+      box.innerHTML = cart.lines.map((line) => `
+        <div class="row" data-line="${line.id}">
+          <div>
+            <div>${line.skuId}</div>
+            <div class="muted">x${line.qty} · ${line.checked ? "已选" : "未选"}</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="secondary" data-act="dec">-</button>
+            <button class="secondary" data-act="inc">+</button>
+            <button class="secondary" data-act="rm">删</button>
+          </div>
+        </div>
+      `).join("");
+      box.querySelectorAll(".row").forEach((row) => {
+        const lineId = row.getAttribute("data-line");
+        const line = cart.lines.find((l) => l.id === lineId);
+        row.querySelector('[data-act="inc"]').onclick = () => updateLine(lineId, { qty: line.qty + 1 });
+        row.querySelector('[data-act="dec"]').onclick = () => updateLine(lineId, { qty: Math.max(1, line.qty - 1) });
+        row.querySelector('[data-act="rm"]').onclick = () => updateLine(lineId, { remove: true });
+      });
+    }
+
+    async function updateLine(lineId, body) {
+      state.cart = await api(`/api/cart/items/${lineId}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
+      renderCart();
+    }
+
+    async function refreshCart() {
+      state.cart = await api("/api/cart");
+      renderCart();
+    }
+
+    async function ensureLogin() {
+      if (state.token) return;
+      const account = $("account").value.trim();
+      const password = $("password").value;
+      const r = await api("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ account, password }),
+      });
+      state.token = r.sessionToken;
+      state.customerId = r.customerId;
+      localStorage.setItem("apos_token", state.token);
+      localStorage.setItem("apos_cid", state.customerId);
+      authPill();
+      return r;
+    }
+
+    $("btnSearch").onclick = () => loadProducts().catch((e) => log(e.message, e.data || e.code));
+    $("q").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") loadProducts().catch((err) => log(err.message));
+    });
+    $("btnSeed").onclick = async () => {
+      try {
+        const r = await api("/api/admin/seed-demo", { method: "POST" });
+        log("种子完成", r);
+        await loadProducts();
+      } catch (e) { log(e.message, e.data || e.code); }
+    };
+    $("btnRegister").onclick = async () => {
+      try {
+        const r = await api("/api/auth/register", {
+          method: "POST",
+          body: JSON.stringify({ account: $("account").value.trim(), password: $("password").value }),
+        });
+        state.token = r.sessionToken;
+        state.customerId = r.customerId;
+        localStorage.setItem("apos_token", state.token);
+        localStorage.setItem("apos_cid", state.customerId);
+        authPill();
+        log("注册并登录成功", r);
+      } catch (e) { log(e.message, e.data || e.code); }
+    };
+    $("btnLogin").onclick = async () => {
+      try {
+        await ensureLogin();
+        log("登录成功", { customerId: state.customerId });
+        await refreshCart();
+      } catch (e) { log(e.message, e.data || e.code); }
+    };
+    $("btnCheckoutReady").onclick = async () => {
+      try {
+        const ready = await api("/api/cart/checkout-ready", { method: "POST" });
+        log("结算就绪", ready);
+      } catch (e) { log(e.message, e.data || e.code); }
+    };
+    $("btnCreateOrder").onclick = async () => {
+      try {
+        await ensureLogin();
+        const order = await api("/api/orders", {
+          method: "POST",
+          body: JSON.stringify({ fromCart: true }),
+        });
+        state.lastOrderId = order.id;
+        const pay = await api("/api/payments", {
+          method: "POST",
+          body: JSON.stringify({ orderId: order.id }),
+        });
+        state.lastPaymentId = pay.paymentId;
+        const charged = await api(`/api/payments/${pay.paymentId}/charge`, { method: "POST" });
+        $("orderBox").innerHTML = `
+          <div class="row"><span>订单</span><strong>${order.id}</strong></div>
+          <div class="row"><span>应付</span><strong>${yuan(order.payAmountCents)}</strong></div>
+          <div class="row"><span>状态</span><strong>${order.status}</strong></div>
+          <div class="row"><span>支付单</span><strong>${pay.paymentId}</strong></div>
+          <button id="btnPay" style="margin-top:10px;width:100%">沙箱支付成功</button>
+        `;
+        $("btnPay").onclick = async () => {
+          try {
+            const settled = await api(`/api/payments/${state.lastPaymentId}/sandbox-settle`, {
+              method: "POST",
+              body: JSON.stringify({ outcome: "SUCCESS" }),
+            });
+            const o = await api(`/api/orders/${state.lastOrderId}`);
+            log("支付完成", { settled, order: o });
+            $("orderBox").insertAdjacentHTML(
+              "beforeend",
+              `<div class="pill on" style="margin-top:8px">订单已支付 · ${o.status}</div>`,
+            );
+            await refreshCart();
+          } catch (e) { log(e.message, e.data || e.code); }
+        };
+        log("订单已创建并拉起支付", { order, pay, charged });
+      } catch (e) { log(e.message, e.data || e.code); }
+    };
+
+    authPill();
+    loadProducts().then(refreshCart).catch((e) => log(e.message));
+  </script>
+</body>
+</html>

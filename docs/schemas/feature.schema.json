@@ -36,7 +36,8 @@
         "aftersale",
         "customer",
         "cart",
-        "agent"
+        "agent",
+        "shop"
       ]
     },
     "kind": {

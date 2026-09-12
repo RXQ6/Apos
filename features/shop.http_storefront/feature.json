@@ -1,0 +1,54 @@
+{
+  "id": "shop.http_storefront",
+  "title": "HTTP API + 最小购物前台",
+  "summary": "Hono 暴露 P0 电商 API，静态页完成商品→购物车→下单→沙箱支付。",
+  "status": "designed",
+  "domain": "shop",
+  "kind": "happy-path",
+  "priority": "P0",
+  "actors": ["buyer", "system"],
+  "modules": {
+    "primary": "catalog",
+    "involved": ["catalog", "cart", "customer", "order", "payment", "inventory"]
+  },
+  "depends_on": [
+    "catalog.search",
+    "cart.add",
+    "cart.checkout_ready",
+    "order.create",
+    "payment.charge",
+    "payment.callback"
+  ],
+  "methods": [
+    { "ref": "catalog.search", "role": "call" },
+    { "ref": "cart.add", "role": "call" },
+    { "ref": "cart.checkout_ready", "role": "call" },
+    { "ref": "order.create", "role": "call" },
+    { "ref": "payment.charge", "role": "call" },
+    { "ref": "payment.callback", "role": "call" }
+  ],
+  "states": {
+    "before": ["not_started"],
+    "after": ["paid"]
+  },
+  "acceptance": [
+    "GET /api/catalog/search 返回在售商品",
+    "游客可加购（X-Guest-Id）；创建订单必须 Bearer 登录",
+    "登录时合并游客购物车；下单成功后清除已勾选行",
+    "sandbox-settle 后订单 paid 且库存扣减",
+    "无 token 创建订单返回 401；非本人订单读写拒绝"
+  ],
+  "errors": [
+    { "code": "AUTH_FAILED", "next": "customer.login" },
+    { "code": "SIGN_INVALID", "next": "payment.callback" }
+  ],
+  "docs": {
+    "scenario": "features/shop.http_storefront/SCENARIO.md",
+    "spec": "docs/compose/spec/shop-http-storefront.md",
+    "modules": ["docs/contracts/p0-contracts.md"]
+  },
+  "harness": {
+    "status": "passing",
+    "verify": "docs:verify"
+  }
+}
