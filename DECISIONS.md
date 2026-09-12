@@ -33,3 +33,4 @@
 | 2026-09-11 | 超时：`sweepTimeoutOrders` + closed 拒收 SUCCESS（`PAYMENT_CLOSED`）；失败可 re-charge | 闭环 timeout/fail_retry 竞态与幂等 |
 | 2026-09-11 | 报价规则：**活动价 > 会员价 > 券**；部分发货按已发数量判完成 | 与拍板一致；避免 partial 提前 completed |
 | 2026-09-11 | 场景收口至 **40/40 passing**；真渠道/安装包仍后置 | 规划仓主链路可验收 |
+| 2026-09-11 | Electron 内嵌 shop + 渠道适配层（sandbox 默认，真渠道凭据预留） | 统一产品入口；真支付需商户密钥 |

@@ -21,6 +21,9 @@ import {
   getOrder,
   getOrCreateCart,
   listAddresses,
+  listPaymentChannels,
+  chargeViaChannel,
+  settleViaChannel,
   listOrders,
   loginCustomer,
   logoutCustomer,
@@ -151,6 +154,14 @@ export function createShopApp(db: AposDb, opts?: { publicDir?: string }): Hono<E
   app.onError((err, c) => jsonError(c, err));
 
   app.get("/api/health", (c) => c.json({ ok: true, service: "apos-shop" }));
+
+  app.get("/api/payments/channels", (c) => {
+    try {
+      return c.json(listPaymentChannels(db));
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
 
   app.post("/api/auth/register", async (c) => {
     try {
@@ -352,10 +363,16 @@ export function createShopApp(db: AposDb, opts?: { publicDir?: string }): Hono<E
     return paymentId;
   }
 
-  app.post("/api/payments/:id/charge", (c) => {
+  app.post("/api/payments/:id/charge", async (c) => {
     try {
       const paymentId = ownPayment(c as never);
-      return c.json(chargePayment(db, paymentId));
+      const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+      const channel = (body.channel ? String(body.channel) : undefined) as
+        | "sandbox"
+        | "alipay"
+        | "wechat"
+        | undefined;
+      return c.json(chargeViaChannel(db, { paymentId, channel }));
     } catch (e) {
       return jsonError(c, e);
     }

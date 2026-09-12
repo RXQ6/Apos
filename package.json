@@ -21,7 +21,8 @@
     "shop": "npm run build -w @apos/shared && npm run dev -w @apos/shop",
     "build:shared": "npm run build -w @apos/shared",
     "build:electron": "npm run build -w @apos/electron",
-    "build:shop": "npm run build -w @apos/shop"
+    "build:shop": "npm run build -w @apos/shop",
+    "dist:electron": "npm run build:shared && npm run build -w @apos/shop && npm run build -w @apos/electron && npm run dist -w @apos/electron"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

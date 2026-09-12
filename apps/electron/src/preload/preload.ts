@@ -8,6 +8,8 @@ export interface AposApi {
   resumeSession: (id: string) => Promise<unknown>;
   send: (text: string) => Promise<unknown>;
   listFeatures: () => Promise<unknown>;
+  openShop: () => Promise<{ ok: boolean; url: string }>;
+  shopUrl: () => Promise<{ url: string; port: number }>;
   onAgentEvent: (cb: (evt: unknown) => void) => () => void;
 }
 
@@ -19,6 +21,8 @@ const api: AposApi = {
   resumeSession: (id) => ipcRenderer.invoke("apos:resume-session", id),
   send: (text) => ipcRenderer.invoke("apos:send", text),
   listFeatures: () => ipcRenderer.invoke("apos:list-features"),
+  openShop: () => ipcRenderer.invoke("apos:open-shop"),
+  shopUrl: () => ipcRenderer.invoke("apos:shop-url"),
   onAgentEvent: (cb) => {
     const listener = (_: unknown, evt: unknown) => cb(evt);
     ipcRenderer.on("apos:agent-event", listener);

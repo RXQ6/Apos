@@ -144,6 +144,28 @@
         <button id="btnCreateOrder">创建订单</button>
       </div>
       <div id="orderBox" style="margin-top:16px"></div>
+      <hr style="border:none;border-top:1px solid var(--line);margin:16px 0" />
+      <h2>地址</h2>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <input id="recv" placeholder="收件人" style="flex:1;min-width:80px" value="张三" />
+        <input id="phone" placeholder="电话" style="flex:1;min-width:90px" value="13800000000" />
+        <input id="detail" placeholder="地址" style="flex:2;min-width:120px" value="上海市" />
+        <button id="btnAddr" class="secondary">保存</button>
+      </div>
+      <div id="addrList" class="muted"></div>
+      <h2 style="margin-top:12px">优惠券</h2>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <input id="couponCode" placeholder="券码 OFF100" style="flex:1" />
+        <button id="btnCoupon" class="secondary">领取</button>
+        <button id="btnSeedCoupon" class="secondary">建演示券</button>
+      </div>
+      <div id="couponMsg" class="muted"></div>
+      <h2 style="margin-top:12px">物流</h2>
+      <div style="display:flex;gap:6px">
+        <input id="shpId" placeholder="发货单 ID" style="flex:1" />
+        <button id="btnTrack" class="secondary">查轨迹</button>
+      </div>
+      <div id="trackBox" class="muted" style="margin-top:6px"></div>
     </aside>
   </main>
   <script>
@@ -395,6 +417,57 @@
           .join("")}</div>`,
       );
     }
+
+    $("btnAddr").onclick = async () => {
+      try {
+        await ensureLogin();
+        const r = await api("/api/me/addresses", {
+          method: "POST",
+          body: JSON.stringify({
+            receiver: $("recv").value.trim(),
+            phone: $("phone").value.trim(),
+            detail: $("detail").value.trim(),
+            isDefault: true,
+          }),
+        });
+        const list = await api("/api/me/addresses");
+        $("addrList").textContent = list.map((a) => `${a.receiver} ${a.detail}`).join(" | ");
+        log("地址已保存", r);
+      } catch (e) { log(e.message, e.data || e.code); }
+    };
+    $("btnSeedCoupon").onclick = async () => {
+      try {
+        const r = await api("/api/pricing/coupons", {
+          method: "POST",
+          body: JSON.stringify({ code: "OFF100", title: "减100", discountCents: 100, totalStock: 50 }),
+        });
+        $("couponMsg").textContent = `已创建券 ${r.code}`;
+        log("券模板", r);
+      } catch (e) { log(e.message, e.data || e.code); }
+    };
+    $("btnCoupon").onclick = async () => {
+      try {
+        await ensureLogin();
+        const code = $("couponCode").value.trim() || "OFF100";
+        const r = await api("/api/me/coupons/receive", {
+          method: "POST",
+          body: JSON.stringify({ code }),
+        });
+        $("couponMsg").textContent = `已领取 ${code} → ${r.couponInstanceId}`;
+        log("领券成功", r);
+      } catch (e) { log(e.message, e.data || e.code); }
+    };
+    $("btnTrack").onclick = async () => {
+      try {
+        const id = $("shpId").value.trim();
+        if (!id) { $("trackBox").textContent = "请输入发货单 ID"; return; }
+        const t = await api(`/api/fulfillments/${id}`);
+        $("trackBox").innerHTML = (t.nodes || [])
+          .map((n) => `<div>${new Date(n.time).toLocaleString()} · ${n.status} · ${n.desc}</div>`)
+          .join("");
+        log("轨迹", t);
+      } catch (e) { log(e.message, e.data || e.code); }
+    };
 
     authPill();
     loadProducts().then(refreshCart).catch((e) => log(e.message));

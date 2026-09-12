@@ -6,10 +6,11 @@
 
 | 项 | 验收 | 证据 |
 |---|---|---|
-| 场景/Harness/契约/选型 | verify PASS | 40 features / 9 modules |
-| 全域 domain + Electron + 支付沙箱 + shop | gate PASS | packages/shared + apps/shop + apps/electron |
-| 超时关单 + 失败重试 | gate PASS | `payment-timeout-fail-retry` |
-| **全场景收口 40/40 passing** | gate PASS | `docs/compose/spec/scenario-closeout-all.md`；shared 25/25 + shop 7/7 |
+| 全场景 40/40 passing | verify PASS | feature-list |
+| **Electron 内嵌小店** | esbuild + IPC open-shop | apps/electron main |
+| **支付渠道适配层** | vitest channels 4 | payment-channels.ts |
+| **前台地址/券/物流** | 单页 UI | apps/shop/public |
+| **安装包脚本 + README** | electron-builder.yml | `npm.cmd run dist:electron` |
 
 ## 进行中
 
@@ -17,17 +18,14 @@
 |---|---|---|
 | （无） | — | — |
 
-## 下一步（可选增强，非阻塞）
+## 下一步（可选）
 
-1. `git push`（网络恢复后；本地 ahead 若干）  
-2. Electron 内嵌 shop / 安装包  
-3. 真实支付渠道与生产鉴权  
-4. 前台优惠券 UI 完整化  
+1. 真实商户密钥写入 `payment.alipay.config` / `payment.wechat.config`  
+2. 本机执行 `npm.cmd run dist:electron` 产出安装包  
+3. Electron 生产环境打包 shop public 路径微调  
 
 ## 当前分支
 
 - `feat/ecommerce-scenario-routing`
-- 远程：`https://github.com/RXQ6/Apos.git`
-- 工作区：`D:\apos`
-- 门禁：`npm.cmd run gate` → **40/40 passing**
-- 小店：`npm.cmd run shop` → `http://127.0.0.1:8787`
+- 门禁：`npm.cmd run gate`
+- 小店：Electron 内嵌或 `npm.cmd run shop`

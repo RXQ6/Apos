@@ -27,6 +27,8 @@ declare global {
       newSession: () => Promise<{ id: string }>;
       resumeSession: (id: string) => Promise<unknown>;
       send: (text: string) => Promise<unknown>;
+      openShop?: () => Promise<{ ok: boolean; url: string }>;
+      shopUrl?: () => Promise<{ url: string; port: number }>;
       onAgentEvent: (cb: (evt: { type: string; payload: unknown }) => void) => () => void;
     };
   }
@@ -150,6 +152,13 @@ export function App() {
         </div>
         <button type="button" className="settings-btn" onClick={() => setShowSettings((s) => !s)}>
           {showSettings ? "关闭设置" : "模型设置"}
+        </button>
+        <button
+          type="button"
+          className="settings-btn"
+          onClick={() => void window.apos?.openShop()}
+        >
+          打开小店
         </button>
         {showSettings && (
           <div className="settings">

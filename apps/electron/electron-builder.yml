@@ -1,0 +1,25 @@
+appId: com.apos.desktop
+productName: Apos
+copyright: Copyright © 2026 Apos
+directories:
+  output: dist-electron
+  buildResources: build
+files:
+  - dist/**
+  - package.json
+extraResources:
+  - from: ../../apps/shop/public
+    to: shop-public
+asar: true
+win:
+  target:
+    - nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+linux:
+  target:
+    - AppImage
+mac:
+  target:
+    - dmg

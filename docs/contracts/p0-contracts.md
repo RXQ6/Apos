@@ -44,7 +44,9 @@
 | POST | `/api/admin/sweep-timeouts` | order.timeout_cancel | 扫描过期待支付订单 |
 | POST | `/api/admin/seed-demo` | — | 本地演示商品种子（apps/shop） |
 
-> 实现入口：`apps/shop`（Hono）。业务路径统一挂 `/api` 前缀；静态前台 `/`。
+> 实现入口：`apps/shop`（Hono）。业务路径统一挂 `/api` 前缀；静态前台 `/`。  
+> 渠道：`GET /api/payments/channels`；charge body 可带 `channel`。  
+> Electron 启动时内嵌 shop（默认 127.0.0.1:8787），侧栏可开小店窗口。
 
 ---
 
