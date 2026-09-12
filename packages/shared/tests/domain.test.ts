@@ -29,6 +29,9 @@ import {
   returnRefund,
   sandboxSettle,
   sandboxSign,
+  paymentTimeoutClose,
+  paymentFail,
+  sweepTimeoutOrders,
   shipShipment,
   signShipment,
   upsertSku,
@@ -268,5 +271,94 @@ describe("payment sandbox channel", () => {
     expect(r.status).toBe("failed");
     expect(getStock(db, "sku_s5").preoccupied).toBe(1);
     expect(getStock(db, "sku_s5").onHand).toBe(4);
+  });
+});
+
+describe("timeout close + fail retry", () => {
+  it("timeout closes payment, order, and releases preoccupy", () => {
+    upsertSku(db, { id: "sku_t1", title: "T1", priceCents: 100, onHand: 2 });
+    const o = createOrder(db, {
+      customerId: "c",
+      items: [{ skuId: "sku_t1", qty: 2 }],
+    });
+    const pay = createPayment(db, o.id);
+    chargePayment(db, pay.paymentId);
+    const r = paymentTimeoutClose(db, pay.paymentId);
+    expect(r.paymentStatus).toBe("closed");
+    expect(r.orderStatus).toBe("closed");
+    expect(getStock(db, "sku_t1").preoccupied).toBe(0);
+    expect(getStock(db, "sku_t1").available).toBe(2);
+    // idempotent
+    const r2 = paymentTimeoutClose(db, pay.paymentId);
+    expect(r2.orderStatus).toBe("closed");
+  });
+
+  it("rejects SUCCESS callback after payment closed", () => {
+    upsertSku(db, { id: "sku_t2", title: "T2", priceCents: 100, onHand: 1 });
+    const o = createOrder(db, {
+      customerId: "c",
+      items: [{ skuId: "sku_t2", qty: 1 }],
+    });
+    const pay = createPayment(db, o.id);
+    paymentTimeoutClose(db, pay.paymentId);
+    expect(() =>
+      sandboxSettle(db, { paymentId: pay.paymentId, channelTxId: "late-1" }),
+    ).toThrowError(expect.objectContaining({ code: "PAYMENT_CLOSED" }));
+    expect(getStock(db, "sku_t2").onHand).toBe(1);
+  });
+
+  it("does not timeout-close an already paid payment", () => {
+    upsertSku(db, { id: "sku_t3", title: "T3", priceCents: 100, onHand: 1 });
+    const o = createOrder(db, {
+      customerId: "c",
+      items: [{ skuId: "sku_t3", qty: 1 }],
+    });
+    const pay = createPayment(db, o.id);
+    sandboxSettle(db, { paymentId: pay.paymentId });
+    expect(() => paymentTimeoutClose(db, pay.paymentId)).toThrowError(
+      expect.objectContaining({ code: "PAYMENT_ALREADY_SUCCESS" }),
+    );
+    expect(getStock(db, "sku_t3").onHand).toBe(0);
+  });
+
+  it("fail then retry charge then success deducts once", () => {
+    upsertSku(db, { id: "sku_t4", title: "T4", priceCents: 100, onHand: 3 });
+    const o = createOrder(db, {
+      customerId: "c",
+      items: [{ skuId: "sku_t4", qty: 1 }],
+    });
+    const pay = createPayment(db, o.id);
+    sandboxSettle(db, { paymentId: pay.paymentId, outcome: "FAILED", channelTxId: "f1" });
+    const again = chargePayment(db, pay.paymentId);
+    expect(again.status).toBe("paying");
+    sandboxSettle(db, { paymentId: pay.paymentId, channelTxId: "ok1" });
+    expect(getStock(db, "sku_t4").onHand).toBe(2);
+    expect(getStock(db, "sku_t4").preoccupied).toBe(0);
+  });
+
+  it("sweepTimeoutOrders closes expired pending orders only", () => {
+    upsertSku(db, { id: "sku_t5", title: "T5", priceCents: 100, onHand: 2 });
+    const o = createOrder(db, {
+      customerId: "c",
+      items: [{ skuId: "sku_t5", qty: 1 }],
+      ttlMs: 1,
+    });
+    createPayment(db, o.id);
+    upsertSku(db, { id: "sku_t6", title: "T6", priceCents: 100, onHand: 2 });
+    const o2 = createOrder(db, {
+      customerId: "c",
+      items: [{ skuId: "sku_t6", qty: 1 }],
+      ttlMs: 60_000,
+    });
+    createPayment(db, o2.id);
+
+    const swept = sweepTimeoutOrders(db, Date.now() + 50);
+    expect(swept.some((s) => s.orderId === o.id && s.orderStatus === "closed")).toBe(true);
+    expect(swept.some((s) => s.orderId === o2.id)).toBe(false);
+    expect(getStock(db, "sku_t5").available).toBe(2);
+    expect(getStock(db, "sku_t6").available).toBe(1);
+
+    const again = sweepTimeoutOrders(db, Date.now() + 50);
+    expect(again.some((s) => s.orderId === o.id)).toBe(false);
   });
 });

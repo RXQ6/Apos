@@ -3,18 +3,20 @@
 ## 前置
 
 - 订单仍为 `pending_payment`
-- 超过 expire_at
+- 超过 `expire_at`（或显式 timeout 关单）
 
 ## 正常步骤
 
-1. 调度触发 `order.timeout_cancel` / `payment.timeout_close`
-2. 订单 → `closed`
-3. `inventory.release`
+1. `sweepTimeoutOrders` / `paymentTimeoutClose` 触发
+2. 关联非 success 支付单 → `closed`
+3. 订单 → `closed`
+4. `inventory.release`（预占释放）
 
 ## 异常
 
-- 若并发支付成功：以支付结果为准，关单失败并记日志
+- 若已支付成功：不关单、不释放（`PAYMENT_ALREADY_SUCCESS` / sweep 跳过）
+- 重复调度幂等
 
 ## 后置
 
-预占释放；支付单 `closed`。
+预占释放；支付单 `closed`；可售恢复。

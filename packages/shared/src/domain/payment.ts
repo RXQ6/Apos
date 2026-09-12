@@ -79,6 +79,9 @@ export function paymentCallbackSuccess(
       | { id: string; order_id: string; amount_cents: number; status: string }
       | undefined;
     if (!pay) throw new DomainError("UNKNOWN_PAYMENT", input.paymentId);
+    if (pay.status === "closed") {
+      throw new DomainError("PAYMENT_CLOSED", `payment ${input.paymentId} already closed`);
+    }
     if (input.amountCents !== undefined && input.amountCents !== pay.amount_cents) {
       throw new DomainError("AMOUNT_MISMATCH", "callback amount mismatch");
     }
@@ -119,21 +122,71 @@ export function paymentTimeoutClose(
   db: AposDb,
   paymentId: string,
 ): { paymentStatus: string; orderId: string; orderStatus: string } {
-  const pay = db
-    .prepare(`SELECT id, order_id, status FROM payment WHERE id = ?`)
-    .get(paymentId) as { id: string; order_id: string; status: string } | undefined;
-  if (!pay) throw new DomainError("PAYMENT_NOT_FOUND", paymentId);
-  if (pay.status === "success") {
-    throw new DomainError("PAYMENT_ALREADY_SUCCESS", paymentId);
+  return requireTx(db, () => {
+    const pay = db
+      .prepare(`SELECT id, order_id, status FROM payment WHERE id = ?`)
+      .get(paymentId) as { id: string; order_id: string; status: string } | undefined;
+    if (!pay) throw new DomainError("PAYMENT_NOT_FOUND", paymentId);
+    if (pay.status === "success") {
+      throw new DomainError("PAYMENT_ALREADY_SUCCESS", paymentId);
+    }
+    if (pay.status === "closed") {
+      const order = getOrder(db, pay.order_id);
+      return {
+        paymentStatus: "closed",
+        orderId: order.id,
+        orderStatus: order.status,
+      };
+    }
+    db.prepare(`UPDATE payment SET status = 'closed' WHERE id = ?`).run(paymentId);
+    const order = cancelOrder(db, pay.order_id, "timeout");
+    emit("order.cancelled", { orderId: order.id, reason: "timeout" });
+    return {
+      paymentStatus: "closed",
+      orderId: order.id,
+      orderStatus: order.status,
+    };
+  });
+}
+
+/**
+ * Close pending orders past expire_at: close non-success payments, cancel order (release stock).
+ * Idempotent; paid orders are skipped.
+ */
+export function sweepTimeoutOrders(
+  db: AposDb,
+  at = now(),
+): Array<{ orderId: string; orderStatus: string; closedPayments: number }> {
+  const rows = db
+    .prepare(
+      `SELECT id FROM orders
+       WHERE status = 'pending_payment' AND expire_at IS NOT NULL AND expire_at <= ?`,
+    )
+    .all(at) as Array<{ id: string }>;
+  const out: Array<{ orderId: string; orderStatus: string; closedPayments: number }> = [];
+  for (const row of rows) {
+    out.push(
+      requireTx(db, () => {
+        const pays = db
+          .prepare(
+            `SELECT id, status FROM payment WHERE order_id = ? AND status != 'success'`,
+          )
+          .all(row.id) as Array<{ id: string; status: string }>;
+        let closed = 0;
+        for (const p of pays) {
+          if (p.status === "closed") continue;
+          db.prepare(`UPDATE payment SET status = 'closed' WHERE id = ?`).run(p.id);
+          closed += 1;
+        }
+        const order = cancelOrder(db, row.id, "timeout");
+        if (order.status === "closed") {
+          emit("order.cancelled", { orderId: order.id, reason: "timeout" });
+        }
+        return { orderId: order.id, orderStatus: order.status, closedPayments: closed };
+      }),
+    );
   }
-  db.prepare(`UPDATE payment SET status = 'closed' WHERE id = ?`).run(paymentId);
-  const order = cancelOrder(db, pay.order_id, "timeout");
-  emit("order.cancelled", { orderId: order.id, reason: "timeout" });
-  return {
-    paymentStatus: "closed",
-    orderId: order.id,
-    orderStatus: order.status,
-  };
+  return out;
 }
 
 export function createRefund(

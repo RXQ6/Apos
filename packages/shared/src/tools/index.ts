@@ -27,8 +27,10 @@ import {
   registerCustomer,
   returnRefund,
   sandboxSettle,
+  paymentTimeoutClose,
   shipShipment,
   signShipment,
+  sweepTimeoutOrders,
   upsertSku,
   getOrCreateCart,
 } from "../domain/index.js";
@@ -357,6 +359,27 @@ export function createToolRegistry(opts: ToolRegistryOptions) {
           outcome,
           channelTxId: a.channelTxId ? String(a.channelTxId) : undefined,
         });
+        return { ok: true, output: JSON.stringify(r, null, 2) };
+      },
+    },
+    {
+      name: "payment_timeout_close",
+      description: "Close one unpaid payment + timeout-cancel order. JSON: {paymentId}",
+      writes: true,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        const r = paymentTimeoutClose(db, String(a.paymentId ?? ""));
+        return { ok: true, output: JSON.stringify(r, null, 2) };
+      },
+    },
+    {
+      name: "order_timeout_sweep",
+      description: "Sweep expired pending orders (close payments + release stock). JSON: {}",
+      writes: true,
+      run: () => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const r = sweepTimeoutOrders(db);
         return { ok: true, output: JSON.stringify(r, null, 2) };
       },
     },

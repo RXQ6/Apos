@@ -20,5 +20,5 @@
     "scenario": "features/payment.fail_retry/SCENARIO.md",
     "modules": ["modules/payment/ROUTING.md"]
   },
-  "harness": { "status": "not_started", "verify": "docs:verify" }
+  "harness": { "status": "passing", "verify": "docs:verify" }
 }

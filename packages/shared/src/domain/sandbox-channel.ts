@@ -117,7 +117,7 @@ export function sandboxSettle(
     };
   }
   if (pay.status === "closed") {
-    throw new DomainError("PAYMENT_ALREADY_SUCCESS", `payment closed: ${input.paymentId}`);
+    throw new DomainError("PAYMENT_CLOSED", `payment closed: ${input.paymentId}`);
   }
 
   const outcome = input.outcome ?? "SUCCESS";

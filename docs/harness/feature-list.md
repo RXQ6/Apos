@@ -43,13 +43,13 @@
 | pricing.coupon_apply | 用券 | P1 | not_started | docs:verify | `features/pricing.coupon_apply/` |
 | pricing.promo_conflict | 优惠冲突 | P1 | not_started | docs:verify | `features/pricing.promo_conflict/` |
 | payment.charge | 发起支付 | P0 | passing | docs:verify | `features/payment.charge/` |
-| payment.fail_retry | 支付失败重试 | P0 | not_started | docs:verify | `features/payment.fail_retry/` |
+| payment.fail_retry | 支付失败重试 | P0 | passing | docs:verify | `features/payment.fail_retry/` |
 | payment.callback | 支付回调 | P0 | passing | docs:verify + 场景走读 | `features/payment.callback/` |
-| payment.timeout_close | 支付超时 | P0 | not_started | docs:verify | `features/payment.timeout_close/` |
+| payment.timeout_close | 支付超时 | P0 | passing | docs:verify | `features/payment.timeout_close/` |
 | order.get | 订单详情 | P0 | not_started | docs:verify | `features/order.get/` |
 | order.repay | 再次支付 | P0 | not_started | docs:verify | `features/order.repay/` |
 | order.cancel | 用户取消 | P0 | passing | docs:verify | `features/order.cancel/` |
-| order.timeout_cancel | 超时关单 | P0 | not_started | docs:verify | `features/order.timeout_cancel/` |
+| order.timeout_cancel | 超时关单 | P0 | passing | docs:verify | `features/order.timeout_cancel/` |
 | order.address_change | 支付前改址 | P1 | not_started | docs:verify | `features/order.address_change/` |
 | fulfillment.ship | 发货 | P0 | passing | docs:verify | `features/fulfillment.ship/` |
 | fulfillment.sign | 签收 | P0 | passing | docs:verify | `features/fulfillment.sign/` |

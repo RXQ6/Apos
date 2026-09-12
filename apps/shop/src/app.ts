@@ -17,11 +17,13 @@ import {
   getOrder,
   getOrCreateCart,
   loginCustomer,
+  paymentTimeoutClose,
   publishSpu,
   receiveChannelCallback,
   registerCustomer,
   resolveCustomer,
   sandboxSettle,
+  sweepTimeoutOrders,
   type AposDb,
 } from "@apos/shared";
 import { readFileSync, existsSync } from "node:fs";
@@ -380,6 +382,23 @@ export function createShopApp(db: AposDb, opts?: { publicDir?: string }): Hono<E
         channelTxId: body.channelTxId ? String(body.channelTxId) : undefined,
       });
       return c.json(r);
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/payments/:id/timeout-close", (c) => {
+    try {
+      const paymentId = ownPayment(c as never);
+      return c.json(paymentTimeoutClose(db, paymentId));
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/admin/sweep-timeouts", (c) => {
+    try {
+      return c.json({ swept: sweepTimeoutOrders(db) });
     } catch (e) {
       return jsonError(c, e);
     }
