@@ -6,7 +6,7 @@ import { emit } from "./events.js";
 export function createPayment(
   db: AposDb,
   orderId: string,
-  channel = "mock",
+  channel = "sandbox",
 ): { paymentId: string; amountCents: number; status: string } {
   const order = getOrder(db, orderId);
   if (order.status !== "pending_payment") {
@@ -38,7 +38,7 @@ export function createPayment(
 export function chargePayment(
   db: AposDb,
   paymentId: string,
-  channel = "mock",
+  channel = "sandbox",
 ): { status: string; channelPayload: unknown } {
   const row = db
     .prepare(`SELECT id, order_id, amount_cents, status FROM payment WHERE id = ?`)
@@ -49,15 +49,21 @@ export function chargePayment(
   if (row.status === "success") {
     return { status: "success", channelPayload: { alreadyPaid: true } };
   }
+  if (row.status === "closed") {
+    throw new DomainError("PAYMENT_ALREADY_SUCCESS", paymentId);
+  }
+  const resolved = channel || "sandbox";
   db.prepare(`UPDATE payment SET status = 'paying', channel = ? WHERE id = ?`).run(
-    channel,
+    resolved,
     paymentId,
   );
   return {
     status: "paying",
     channelPayload: {
-      mockPayUrl: `mock://pay/${paymentId}`,
+      channel: resolved,
+      sandboxPayUrl: `sandbox://pay/${paymentId}`,
       amountCents: row.amount_cents,
+      hint: "complete via sandboxSettle → receiveChannelCallback (signed)",
     },
   };
 }

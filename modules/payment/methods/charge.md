@@ -10,15 +10,16 @@
 
 ## 输入
 
-- payment_id 或 order_id, channel
+- payment_id 或 order_id, channel（默认 `sandbox`）
 
 ## 输出
 
-- channel_payload（跳转参数/客户端参数）
+- channel_payload：沙箱返回 `sandboxPayUrl`（`sandbox://pay/<paymentId>`）、`amountCents`、`channel`
+- 完成支付走 `sandboxSettle` → 签名回调 `receiveChannelCallback`
 
 ## 失败
 
-- `AMOUNT_MISMATCH` / `CHANNEL_UNAVAILABLE` / `ORDER_NOT_PAYABLE`
+- `AMOUNT_MISMATCH` / `CHANNEL_UNAVAILABLE` / `ORDER_NOT_PAYABLE` / `PAYMENT_ALREADY_SUCCESS`（已关单）
 
 ## 禁止
 

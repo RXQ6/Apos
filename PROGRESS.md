@@ -7,11 +7,11 @@
 | 项 | 验收 | 证据 |
 |---|---|---|
 | 场景/Harness/契约/选型 | verify PASS | 39 features / 9 modules |
-| 全域 domain 运行时 + Electron 工作台 | smoke + vitest 5/5 + app ready | packages/shared + apps/electron |
+| 全域 domain 运行时 + Electron 工作台 | smoke + vitest + app ready | packages/shared + apps/electron |
 | A–D 落地路径、E 后置 | PROGRESS/DECISIONS | 已推送 GitHub |
 | Electron 启动修复（内嵌 schema、renderer 路径） | main 无 FILE_NOT_FOUND | `497866d` |
 | Provider 设置 + AES credentials | smoke KEY PATH OK | main IPC |
-| Git 与 origin 同步 | status clean | `497866d` |
+| **A 支付沙箱（验签回调）** | gate PASS + 独立评审 7/7 | `docs/compose/spec/payment-sandbox.md`；vitest 10/10；smoke sandbox-pay |
 
 ## 进行中
 
@@ -19,18 +19,18 @@
 |---|---|---|
 | （无） | — | — |
 
-## 下一步（二选一，用户拍板）
+## 下一步（用户拍板）
 
-1. **A 真支付沙箱** 替换 mock 回调  
-2. **B HTTP API + 最小购物前台**  
-3. 用户本机：模型设置填 API Key，点通 UI 与 LLM  
-4. 可选：electron-builder 安装包  
+1. **B HTTP API + 最小购物前台**（Hono：商品→购物车→下单）  
+2. 用户本机：模型设置填 API Key，点通 UI 与 LLM  
+3. 可选：electron-builder 安装包  
+4. 后续：`payment.fail_retry` 状态机（FAILED 审计 / 覆盖规则）
 
 ## 当前分支
 
-- `feat/ecommerce-scenario-routing` @ `497866d`
+- `feat/ecommerce-scenario-routing`
 - 远程：`https://github.com/RXQ6/Apos.git`
 - 工作区：`D:\apos`
-- 门禁：`npm run verify && npm run smoke && npm test`
-- Electron：`npm run build:shared && npm run build -w @apos/electron` 后启动 dist/main
+- 门禁：`npm.cmd run gate`（verify && build:shared && smoke && test）
+- Electron：`npm.cmd run build:shared && npm.cmd run build -w @apos/electron` 后启动 dist/main
 - 镜像：`ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`

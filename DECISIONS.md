@@ -27,3 +27,5 @@
 | 2026-09-11 | Pi 无 Key 时 echo/工具；有 Key 走 pi-agent-core/pi-ai bridge | 可离线开发 |
 | 2026-09-11 | 嵌套事务用 SAVEPOINT | 避免 payment callback 内再 BEGIN |
 | 2026-09-11 | E 后置：MCP/秒杀/跨境/复杂促销/完整安装包 | 见 PROGRESS |
+| 2026-09-11 | 支付入账唯一口 `receiveChannelCallback`（HMAC 验签后）；`sandboxSettle` 模拟渠道 | 闭环 payment.callback 验收「验签通过才处理」；HTTP 属选项 B |
+| 2026-09-11 | 沙箱密钥：settings `payment.sandbox.secret` / 默认 `apos-sandbox-dev-secret` | 本机可跑通且可覆盖；不接真实渠道 |

@@ -15,7 +15,7 @@
 | 方法 ID | 一句话 | 文档 |
 |---|---|---|
 | payment.create | 创建支付单 | `methods/create.md` |
-| payment.charge | 发起扣款/收银台 | 后续补 |
+| payment.charge | 发起扣款/收银台 | `methods/charge.md` |
 | payment.callback | 渠道回调 | `methods/callback.md` |
 | payment.timeout_close | 支付超时关闭 | `methods/timeout_close.md` |
 | payment.refund | 发起退款 | 后续补 |

@@ -6,5 +6,6 @@ export * from "./cart.js";
 export * from "./customer.js";
 export * from "./catalog.js";
 export * from "./payment.js";
+export * from "./sandbox-channel.js";
 export * from "./fulfillment.js";
 export * from "./aftersale.js";

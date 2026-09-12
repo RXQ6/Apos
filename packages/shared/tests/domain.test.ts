@@ -8,6 +8,7 @@ import {
   cartCheckoutReady,
   cancelOrder,
   catalogSearch,
+  chargePayment,
   createOrder,
   createPayment,
   createShipment,
@@ -21,11 +22,13 @@ import {
   markReturnReceived,
   openAftersale,
   openAposDb,
-  paymentCallbackSuccess,
   publishSpu,
+  receiveChannelCallback,
   refundOnly,
   registerCustomer,
   returnRefund,
+  sandboxSettle,
+  sandboxSign,
   shipShipment,
   signShipment,
   upsertSku,
@@ -116,16 +119,14 @@ describe("customer + catalog + payment + aftersale e2e", () => {
       items: [{ skuId: sku, qty: 1 }],
     });
     const pay = createPayment(db, o.id);
-    const cb = paymentCallbackSuccess(db, {
-      paymentId: pay.paymentId,
-      channelTxId: "tx1",
-    });
+    const cb = sandboxSettle(db, { paymentId: pay.paymentId, channelTxId: "tx1" }) as {
+      orderStatus: string;
+    };
     expect(cb.orderStatus).toBe("paid");
-    // idempotent
-    const cb2 = paymentCallbackSuccess(db, {
-      paymentId: pay.paymentId,
-      channelTxId: "tx1",
-    });
+    // idempotent settle
+    const cb2 = sandboxSettle(db, { paymentId: pay.paymentId, channelTxId: "tx1" }) as {
+      orderStatus: string;
+    };
     expect(cb2.orderStatus).toBe("paid");
 
     // refund only
@@ -145,7 +146,7 @@ describe("customer + catalog + payment + aftersale e2e", () => {
       items: [{ skuId: sku, qty: 2 }],
     });
     const pay2 = createPayment(db, o2.id);
-    paymentCallbackSuccess(db, { paymentId: pay2.paymentId, channelTxId: "tx2" });
+    sandboxSettle(db, { paymentId: pay2.paymentId, channelTxId: "tx2" });
     const shp = createShipment(db, { orderId: o2.id });
     shipShipment(db, { shipmentId: shp, carrier: "SF", trackingNo: "T1" });
     signShipment(db, shp);
@@ -160,5 +161,112 @@ describe("customer + catalog + payment + aftersale e2e", () => {
     markReturnReceived(db, open2.aftersaleId);
     const rf2 = returnRefund(db, open2.aftersaleId);
     expect(rf2.status).toBe("success");
+  });
+});
+
+describe("payment sandbox channel", () => {
+  it("charge returns sandbox pay url, not mock", () => {
+    upsertSku(db, { id: "sku_s1", title: "S1", priceCents: 100, onHand: 2 });
+    const o = createOrder(db, {
+      customerId: "c",
+      items: [{ skuId: "sku_s1", qty: 1 }],
+    });
+    const pay = createPayment(db, o.id);
+    const charged = chargePayment(db, pay.paymentId);
+    expect(charged.status).toBe("paying");
+    const payload = charged.channelPayload as { sandboxPayUrl?: string; mockPayUrl?: string };
+    expect(payload.sandboxPayUrl).toContain("sandbox://pay/");
+    expect(payload.mockPayUrl).toBeUndefined();
+  });
+
+  it("rejects invalid signature without deducting", () => {
+    upsertSku(db, { id: "sku_s2", title: "S2", priceCents: 100, onHand: 2 });
+    const o = createOrder(db, {
+      customerId: "c",
+      items: [{ skuId: "sku_s2", qty: 1 }],
+    });
+    const pay = createPayment(db, o.id);
+    const body = {
+      payload: {
+        channel: "sandbox" as const,
+        paymentId: pay.paymentId,
+        channelTxId: "bad-tx",
+        amountCents: pay.amountCents,
+        status: "SUCCESS" as const,
+        timestamp: 1,
+      },
+      signature: "deadbeef",
+    };
+    expect(() => receiveChannelCallback(db, body)).toThrowError(
+      expect.objectContaining({ code: "SIGN_INVALID" }),
+    );
+    expect(getStock(db, "sku_s2").onHand).toBe(2);
+    expect(getStock(db, "sku_s2").preoccupied).toBe(1);
+  });
+
+  it("accepts valid signed callback and is idempotent on channelTxId", () => {
+    upsertSku(db, { id: "sku_s3", title: "S3", priceCents: 50, onHand: 3 });
+    const o = createOrder(db, {
+      customerId: "c",
+      items: [{ skuId: "sku_s3", qty: 2 }],
+    });
+    const pay = createPayment(db, o.id);
+    const payload = {
+      channel: "sandbox" as const,
+      paymentId: pay.paymentId,
+      channelTxId: "signed-1",
+      amountCents: pay.amountCents,
+      status: "SUCCESS" as const,
+      timestamp: 42,
+    };
+    const signature = sandboxSign(payload);
+    const r1 = receiveChannelCallback(db, { payload, signature }) as {
+      orderStatus: string;
+    };
+    expect(r1.orderStatus).toBe("paid");
+    expect(getStock(db, "sku_s3").onHand).toBe(1);
+    expect(getStock(db, "sku_s3").preoccupied).toBe(0);
+
+    const r2 = receiveChannelCallback(db, { payload, signature }) as {
+      orderStatus: string;
+    };
+    expect(r2.orderStatus).toBe("paid");
+    expect(getStock(db, "sku_s3").onHand).toBe(1);
+  });
+
+  it("rejects amount mismatch after valid signature", () => {
+    upsertSku(db, { id: "sku_s4", title: "S4", priceCents: 100, onHand: 1 });
+    const o = createOrder(db, {
+      customerId: "c",
+      items: [{ skuId: "sku_s4", qty: 1 }],
+    });
+    const pay = createPayment(db, o.id);
+    const payload = {
+      channel: "sandbox" as const,
+      paymentId: pay.paymentId,
+      channelTxId: "amt-1",
+      amountCents: pay.amountCents + 1,
+      status: "SUCCESS" as const,
+      timestamp: 7,
+    };
+    const signature = sandboxSign(payload);
+    expect(() => receiveChannelCallback(db, { payload, signature })).toThrowError(
+      expect.objectContaining({ code: "AMOUNT_MISMATCH" }),
+    );
+  });
+
+  it("sandbox settle FAILED marks payment failed and keeps stock", () => {
+    upsertSku(db, { id: "sku_s5", title: "S5", priceCents: 80, onHand: 4 });
+    const o = createOrder(db, {
+      customerId: "c",
+      items: [{ skuId: "sku_s5", qty: 1 }],
+    });
+    const pay = createPayment(db, o.id);
+    const r = sandboxSettle(db, { paymentId: pay.paymentId, outcome: "FAILED" }) as {
+      status: string;
+    };
+    expect(r.status).toBe("failed");
+    expect(getStock(db, "sku_s5").preoccupied).toBe(1);
+    expect(getStock(db, "sku_s5").onHand).toBe(4);
   });
 });

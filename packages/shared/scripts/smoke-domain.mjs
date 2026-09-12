@@ -1,5 +1,5 @@
 /**
- * Smoke: inventory preoccupy → order create → pay deduct → cancel path.
+ * Smoke: inventory preoccupy → order create → sandbox pay deduct → cancel path.
  */
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -7,10 +7,11 @@ import { join } from "node:path";
 import {
   cancelOrder,
   createOrder,
+  createPayment,
   DomainError,
   getStock,
-  markPaidAndDeduct,
   openAposDb,
+  sandboxSettle,
   upsertSku,
 } from "../dist/index.js";
 
@@ -43,13 +44,16 @@ try {
   if (!(e instanceof DomainError) || e.code !== "STOCK_INSUFFICIENT") throw e;
 }
 
-const paid = markPaidAndDeduct(db, order.id);
-if (paid.status !== "paid") throw new Error("pay fail");
+const pay = createPayment(db, order.id);
+const settled = sandboxSettle(db, { paymentId: pay.paymentId });
+if (settled.orderStatus !== "paid") {
+  throw new Error(`sandbox pay fail ${JSON.stringify(settled)}`);
+}
 const stock2 = getStock(db, "sku_apple");
 if (stock2.onHand !== 1 || stock2.preoccupied !== 0) {
   throw new Error(`deduct fail ${JSON.stringify(stock2)}`);
 }
-markPaidAndDeduct(db, order.id);
+sandboxSettle(db, { paymentId: pay.paymentId });
 
 const order2 = createOrder(db, {
   customerId: "c1",
@@ -71,4 +75,4 @@ try {
 } catch {
   /* Windows file lock */
 }
-console.log("SMOKE PASS: preoccupy/create/oversell/pay/cancel");
+console.log("SMOKE PASS: preoccupy/create/oversell/sandbox-pay/cancel");

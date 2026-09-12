@@ -60,7 +60,7 @@
   ],
   "docs": {
     "scenario": "features/payment.callback/SCENARIO.md",
-    "spec": "docs/compose/spec/ecommerce-scenario-routing.md",
+    "spec": "docs/compose/spec/payment-sandbox.md",
     "modules": [
       "modules/payment/ROUTING.md",
       "modules/order/ROUTING.md"

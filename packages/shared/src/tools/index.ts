@@ -21,11 +21,12 @@ import {
   markReturnReceived,
   offShelfSpu,
   openAftersale,
-  paymentCallbackSuccess,
   publishSpu,
+  receiveChannelCallback,
   refundOnly,
   registerCustomer,
   returnRefund,
+  sandboxSettle,
   shipShipment,
   signShipment,
   upsertSku,
@@ -327,7 +328,7 @@ export function createToolRegistry(opts: ToolRegistryOptions) {
       run: (argText) => {
         if (!db) return { ok: false, error: "db not attached" };
         const a = parseJsonArgs(argText);
-        const p = createPayment(db, String(a.orderId ?? ""), a.channel ? String(a.channel) : "mock");
+        const p = createPayment(db, String(a.orderId ?? ""), a.channel ? String(a.channel) : "sandbox");
         return { ok: true, output: JSON.stringify(p, null, 2) };
       },
     },
@@ -343,16 +344,46 @@ export function createToolRegistry(opts: ToolRegistryOptions) {
       },
     },
     {
-      name: "payment_callback",
-      description: "Mock channel success callback. JSON: {paymentId,channelTxId}",
+      name: "payment_sandbox_settle",
+      description:
+        'Sandbox channel settle (signed callback). JSON: {paymentId,outcome?:SUCCESS|FAILED,channelTxId?}',
       writes: true,
       run: (argText) => {
         if (!db) return { ok: false, error: "db not attached" };
         const a = parseJsonArgs(argText);
-        const r = paymentCallbackSuccess(db, {
+        const outcome = a.outcome === "FAILED" ? ("FAILED" as const) : ("SUCCESS" as const);
+        const r = sandboxSettle(db, {
           paymentId: String(a.paymentId ?? ""),
-          channelTxId: String(a.channelTxId ?? `tx_${Date.now()}`),
-          amountCents: a.amountCents === undefined ? undefined : Number(a.amountCents),
+          outcome,
+          channelTxId: a.channelTxId ? String(a.channelTxId) : undefined,
+        });
+        return { ok: true, output: JSON.stringify(r, null, 2) };
+      },
+    },
+    {
+      name: "payment_callback",
+      description:
+        "Signed channel callback. JSON: {payload:{paymentId,channelTxId,amountCents,status,timestamp},signature}",
+      writes: true,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        const raw = (a.payload ?? a) as Record<string, unknown>;
+        const statusRaw = String(raw.status ?? "SUCCESS").toUpperCase();
+        if (statusRaw !== "SUCCESS" && statusRaw !== "FAILED") {
+          return { ok: false, error: "BAD_ARGS: status must be SUCCESS|FAILED" };
+        }
+        const payload = {
+          channel: "sandbox" as const,
+          paymentId: String(raw.paymentId ?? ""),
+          channelTxId: String(raw.channelTxId ?? ""),
+          amountCents: Number(raw.amountCents ?? 0),
+          status: statusRaw as "SUCCESS" | "FAILED",
+          timestamp: Number(raw.timestamp ?? Date.now()),
+        };
+        const r = receiveChannelCallback(db, {
+          payload,
+          signature: String(a.signature ?? ""),
         });
         return { ok: true, output: JSON.stringify(r, null, 2) };
       },

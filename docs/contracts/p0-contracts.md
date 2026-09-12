@@ -31,7 +31,7 @@
 | POST | `/orders/:id/address` | order.address_change | |
 | POST | `/payments` | payment.create | |
 | POST | `/payments/:id/charge` | payment.charge | |
-| POST | `/payments/callback` | payment.callback | 渠道回调，需验签 |
+| POST | `/payments/callback` | payment.callback | 渠道回调 body=`{payload,signature}`，HMAC 验签 |
 | POST | `/aftersales` | aftersale.open | |
 | POST | `/aftersales/:id/refund-only` | aftersale.refund_only | |
 | POST | `/aftersales/:id/return-refund` | aftersale.return_refund | 状态机推进 |
@@ -103,8 +103,14 @@ feature_state(feature_id TEXT PK, harness_status, verify_cmd, updated_at);
 ### 关键不变式
 
 1. 下单：catalog 校验 → pricing 快照 → inventory.preoccupy → 落库（失败全回滚）  
-2. 支付成功：幂等 `channel_tx_id` → mark_paid → deduct  
+2. 支付成功：**先验签** → 幂等 `channel_tx_id` → mark_paid → deduct  
 3. 退货退款：return_received 之前 **禁止** refund  
+
+### 沙箱渠道（channel=sandbox）
+
+- 入账唯一口：`receiveChannelCallback({payload,signature})`
+- 模拟渠道：`sandboxSettle({paymentId,outcome})` 生成 tx 并签名投递
+- 规范串与密钥见 `modules/payment/methods/callback.md`
 
 ---
 
