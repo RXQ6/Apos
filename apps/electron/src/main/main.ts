@@ -183,7 +183,7 @@ function ensureShopServer() {
           return false;
         }
       }) ?? undefined;
-    shop = startShopServer(db, { port: shopPort, publicDir });
+    shop = startShopServer(db, { port: shopPort, publicDir, repoRoot });
     shopPort = shop.port;
     log("shop server", `http://127.0.0.1:${shopPort}`, { publicDir });
     return shop;

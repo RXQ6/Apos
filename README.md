@@ -23,6 +23,18 @@ npm.cmd run dev           # Electron 工作台（内嵌启动小店）
 2. 「种子数据」→ 注册/登录 → 加购 → 创建订单 → 沙箱支付
 3. 可选：地址簿、演示券 OFF100、物流轨迹查询
 
+## 网页版工作台（Agent）
+
+纯浏览器即可，无需 Electron：
+
+```bash
+npm.cmd run shop
+# 打开 http://127.0.0.1:8787/workbench
+```
+
+- 场景列表 / 权限三档 / 会话 / 对话（无 Key 为 echo+工具）
+- 模型设置保存 Provider；小店入口在顶栏
+
 ## 目录
 
 ```text

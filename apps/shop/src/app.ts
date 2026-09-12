@@ -43,7 +43,18 @@ import {
   signShipment,
   sweepTimeoutOrders,
   trackShipment,
+  AposAgentRunner,
+  listFeatures,
+  getProvidersJson,
+  setProvidersJson,
+  saveProviderConfig,
+  insertSession,
+  listSessions,
+  newSessionMeta,
+  resolveAppPaths,
   type AposDb,
+  type PermissionMode,
+  type ProviderConfig,
 } from "@apos/shared";
 import { readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -161,9 +172,41 @@ function requireOrderOwner(db: AposDb, orderId: string, customerId: string): voi
   }
 }
 
-export function createShopApp(db: AposDb, opts?: { publicDir?: string }): Hono<Env> {
+export function createShopApp(
+  db: AposDb,
+  opts?: { publicDir?: string; repoRoot?: string; sessionsRoot?: string },
+): Hono<Env> {
   const app = new Hono<Env>();
   const publicDir = resolvePublicDir(opts?.publicDir);
+  const repoRoot = opts?.repoRoot ?? process.env.APOS_REPO_ROOT ?? process.cwd();
+  const sessionsRoot =
+    opts?.sessionsRoot ?? resolveAppPaths(process.env.APOS_HOME).sessionsDir;
+
+  let agentMode: PermissionMode = "ask";
+  let agentSessionId = "";
+  let runner: AposAgentRunner | null = null;
+
+  function loadProviders(): ProviderConfig[] {
+    const raw = getProvidersJson(db);
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw) as ProviderConfig[];
+    } catch {
+      return [];
+    }
+  }
+
+  function ensureRunner(sessionId: string) {
+    if (runner && runner.sessionId === sessionId) return runner;
+    runner = new AposAgentRunner(sessionId, {
+      repoRoot,
+      sessionsRoot,
+      permissionMode: agentMode,
+      db,
+      providers: loadProviders(),
+    });
+    return runner;
+  }
 
   app.use("*", async (c, next) => {
     c.set("db", db);
@@ -173,6 +216,145 @@ export function createShopApp(db: AposDb, opts?: { publicDir?: string }): Hono<E
   app.onError((err, c) => jsonError(c, err));
 
   app.get("/api/health", (c) => c.json({ ok: true, service: "apos-shop" }));
+
+  // —— Agent workbench (web) ——
+  app.get("/api/agent/bootstrap", (c) => {
+    try {
+      const features = listFeatures(repoRoot);
+      const sessions = listSessions(db);
+      const providers = loadProviders().map((p) => ({
+        id: p.id,
+        label: p.label,
+        baseUrl: p.baseUrl,
+        model: p.model,
+        apiKey: p.apiKey ? "***" : undefined,
+      }));
+      if (!agentSessionId && sessions[0]) {
+        agentSessionId = sessions[0].id;
+      }
+      if (agentSessionId) ensureRunner(agentSessionId);
+      return c.json({
+        repoRoot,
+        features,
+        sessions,
+        mode: agentMode,
+        providers,
+        sessionId: agentSessionId,
+        tools: runner?.listTools() ?? [],
+      });
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/agent/session", async (c) => {
+    try {
+      const meta = newSessionMeta(
+        `会话 ${new Date().toLocaleString("zh-CN")}`,
+        agentMode,
+      );
+      insertSession(db, { ...meta, permissionMode: agentMode });
+      agentSessionId = meta.id;
+      ensureRunner(meta.id);
+      return c.json(meta, 201);
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/agent/session/:id", (c) => {
+    try {
+      agentSessionId = c.req.param("id");
+      ensureRunner(agentSessionId);
+      return c.json({ ok: true, sessionId: agentSessionId });
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/agent/mode", async (c) => {
+    try {
+      const body = await c.req.json();
+      const m = String(body.mode ?? "ask") as PermissionMode;
+      if (!["explore", "ask", "allow-all"].includes(m)) {
+        throw new DomainError("BAD_ARGS", "mode");
+      }
+      agentMode = m;
+      runner?.setMode(m);
+      return c.json({ mode: agentMode });
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/agent/providers", async (c) => {
+    try {
+      const body = await c.req.json();
+      const list = (body.providers as ProviderConfig[] | undefined) ?? [];
+      setProvidersJson(db, JSON.stringify(list));
+      const secret =
+        process.env.APOS_CREDENTIALS_SECRET ??
+        (() => {
+          try {
+            return (
+              (db
+                .prepare(`SELECT value FROM app_settings WHERE key = ?`)
+                .get("credentials_secret") as { value: string } | undefined
+              )?.value ?? "apos-local"
+            );
+          } catch {
+            return "apos-local";
+          }
+        })();
+      try {
+        saveProviderConfig(
+          join(resolveAppPaths(process.env.APOS_HOME).root, "credentials.enc"),
+          list,
+          secret,
+        );
+      } catch {
+        /* optional */
+      }
+      runner?.setProviders(loadProviders());
+      return c.json({ ok: true });
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/agent/send", async (c) => {
+    try {
+      const body = await c.req.json();
+      const text = String(body.text ?? "");
+      if (!text.trim()) throw new DomainError("BAD_ARGS", "text required");
+      if (!agentSessionId) {
+        const meta = newSessionMeta(
+          `会话 ${new Date().toLocaleString("zh-CN")}`,
+          agentMode,
+        );
+        insertSession(db, { ...meta, permissionMode: agentMode });
+        agentSessionId = meta.id;
+      }
+      const r = ensureRunner(agentSessionId);
+      const events: unknown[] = [];
+      const onEvt = (e: unknown) => events.push(e);
+      r.on("event", onEvt);
+      try {
+        await r.handleUserInput(text);
+      } finally {
+        r.off("event", onEvt);
+      }
+      return c.json({ sessionId: agentSessionId, events });
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.get("/workbench", (c) => {
+    const htmlPath = join(publicDir, "workbench.html");
+    if (!existsSync(htmlPath)) return c.text("workbench missing", 404);
+    return c.html(readFileSync(htmlPath, "utf8"));
+  });
 
   app.get("/api/payments/channels", (c) => {
     try {

@@ -1,13 +1,18 @@
 import { serve } from "@hono/node-server";
 import type { ServerType } from "@hono/node-server";
 import type { AposDb } from "@apos/shared";
+import { resolveAppPaths } from "@apos/shared";
 import { createShopApp } from "./app.js";
 
 export function startShopServer(
   db: AposDb,
-  opts?: { port?: number; publicDir?: string },
+  opts?: { port?: number; publicDir?: string; repoRoot?: string },
 ): { port: number; close: () => void; server: ServerType } {
-  const app = createShopApp(db, { publicDir: opts?.publicDir });
+  const app = createShopApp(db, {
+    publicDir: opts?.publicDir,
+    repoRoot: opts?.repoRoot ?? process.env.APOS_REPO_ROOT ?? process.cwd(),
+    sessionsRoot: resolveAppPaths(process.env.APOS_HOME).sessionsDir,
+  });
   const port = opts?.port ?? Number(process.env.PORT ?? 8787);
   const server = serve({ fetch: app.fetch, port, hostname: "127.0.0.1" });
   const addr = server.address();
