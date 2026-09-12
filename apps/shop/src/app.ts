@@ -9,21 +9,37 @@ import {
   cartUpdate,
   catalogDetail,
   catalogSearch,
+  changeOrderAddress,
   chargePayment,
+  createCouponTemplate,
   createOrder,
   createPayment,
   createSpu,
+  createShipment,
   DomainError,
+  getCustomer,
   getOrder,
   getOrCreateCart,
+  listAddresses,
+  listOrders,
   loginCustomer,
+  logoutCustomer,
+  offShelfSpu,
   paymentTimeoutClose,
   publishSpu,
+  quoteCheckout,
   receiveChannelCallback,
+  receiveCoupon,
   registerCustomer,
+  repayOrder,
   resolveCustomer,
   sandboxSettle,
+  saveAddress,
+  setSkuActivityPrice,
+  shipShipment,
+  signShipment,
   sweepTimeoutOrders,
+  trackShipment,
   type AposDb,
 } from "@apos/shared";
 import { readFileSync, existsSync } from "node:fs";
@@ -399,6 +415,203 @@ export function createShopApp(db: AposDb, opts?: { publicDir?: string }): Hono<E
   app.post("/api/admin/sweep-timeouts", (c) => {
     try {
       return c.json({ swept: sweepTimeoutOrders(db) });
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/auth/logout", (c) => {
+    try {
+      const token = bearer(c);
+      if (!token) throw new DomainError("AUTH_FAILED", "missing token");
+      logoutCustomer(db, token);
+      return c.json({ ok: true });
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.get("/api/me", (c) => {
+    try {
+      const customerId = requireCustomer(c as never);
+      return c.json(getCustomer(db, customerId));
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.get("/api/me/addresses", (c) => {
+    try {
+      const customerId = requireCustomer(c as never);
+      return c.json(listAddresses(db, customerId));
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/me/addresses", async (c) => {
+    try {
+      const customerId = requireCustomer(c as never);
+      const body = await c.req.json();
+      const id = saveAddress(db, customerId, {
+        receiver: String(body.receiver ?? ""),
+        phone: String(body.phone ?? ""),
+        detail: String(body.detail ?? ""),
+        isDefault: Boolean(body.isDefault),
+      });
+      return c.json({ id }, 201);
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.get("/api/orders", (c) => {
+    try {
+      const customerId = requireCustomer(c as never);
+      return c.json(listOrders(db, customerId));
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/orders/:id/address", async (c) => {
+    try {
+      const customerId = requireCustomer(c as never);
+      requireOrderOwner(db, c.req.param("id"), customerId);
+      const body = await c.req.json();
+      return c.json(changeOrderAddress(db, c.req.param("id"), body.address ?? body));
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/orders/:id/repay", (c) => {
+    try {
+      const customerId = requireCustomer(c as never);
+      requireOrderOwner(db, c.req.param("id"), customerId);
+      return c.json(repayOrder(db, c.req.param("id")));
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/pricing/quote", async (c) => {
+    try {
+      const body = await c.req.json();
+      let memberLevel = "base";
+      const token = bearer(c);
+      if (token) memberLevel = resolveCustomer(db, token).memberLevel;
+      const items =
+        (body.items as Array<{ skuId: string; qty: number }> | undefined) ?? [];
+      return c.json(
+        quoteCheckout(db, {
+          items,
+          memberLevel,
+          couponInstanceId: body.couponInstanceId
+            ? String(body.couponInstanceId)
+            : undefined,
+        }),
+      );
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/pricing/coupons", async (c) => {
+    try {
+      const body = await c.req.json();
+      return c.json(
+        createCouponTemplate(db, {
+          code: String(body.code ?? ""),
+          title: String(body.title ?? body.code ?? ""),
+          discountCents: Number(body.discountCents ?? 0),
+          minAmountCents: body.minAmountCents
+            ? Number(body.minAmountCents)
+            : undefined,
+          totalStock: body.totalStock ? Number(body.totalStock) : undefined,
+          perUserLimit: body.perUserLimit ? Number(body.perUserLimit) : undefined,
+        }),
+        201,
+      );
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/me/coupons/receive", async (c) => {
+    try {
+      const customerId = requireCustomer(c as never);
+      const body = await c.req.json();
+      return c.json(
+        receiveCoupon(db, {
+          customerId,
+          code: body.code ? String(body.code) : undefined,
+          templateId: body.templateId ? String(body.templateId) : undefined,
+        }),
+        201,
+      );
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/admin/sku-activity", async (c) => {
+    try {
+      const body = await c.req.json();
+      setSkuActivityPrice(db, String(body.skuId ?? ""), Number(body.priceCents ?? 0));
+      return c.json({ ok: true, skuId: body.skuId, priceCents: body.priceCents });
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/admin/spus/:id/off-shelf", (c) => {
+    try {
+      return c.json({ status: offShelfSpu(db, c.req.param("id")) });
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.get("/api/fulfillments/:shipmentId", (c) => {
+    try {
+      return c.json(trackShipment(db, c.req.param("shipmentId")));
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/internal/fulfillments", async (c) => {
+    try {
+      const body = await c.req.json();
+      const shipmentId = createShipment(db, {
+        orderId: String(body.orderId ?? ""),
+        lines: body.lines as Array<{ orderLineId: string; qty: number }> | undefined,
+      });
+      return c.json({ shipmentId }, 201);
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/internal/fulfillments/:id/ship", async (c) => {
+    try {
+      const body = await c.req.json();
+      return c.json(
+        shipShipment(db, {
+          shipmentId: c.req.param("id"),
+          carrier: String(body.carrier ?? "SF"),
+          trackingNo: String(body.trackingNo ?? ""),
+        }),
+      );
+    } catch (e) {
+      return jsonError(c, e);
+    }
+  });
+
+  app.post("/api/internal/fulfillments/:id/sign", (c) => {
+    try {
+      return c.json(signShipment(db, c.req.param("id")));
     } catch (e) {
       return jsonError(c, e);
     }

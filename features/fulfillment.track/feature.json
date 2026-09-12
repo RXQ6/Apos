@@ -6,19 +6,56 @@
   "domain": "fulfillment",
   "kind": "happy-path",
   "priority": "P1",
-  "actors": ["buyer", "system"],
-  "modules": { "primary": "fulfillment", "involved": ["fulfillment", "order"] },
-  "depends_on": ["fulfillment.ship"],
-  "methods": [
-    { "ref": "fulfillment.track", "role": "define" },
-    { "ref": "order.get", "role": "call" }
+  "actors": [
+    "buyer",
+    "system"
   ],
-  "states": { "before": ["shipped"], "after": ["tracked"] },
-  "acceptance": ["仅本人订单可查轨迹", "节点有序"],
-  "errors": [{ "code": "FORBIDDEN", "next": "customer.login" }],
+  "modules": {
+    "primary": "fulfillment",
+    "involved": [
+      "fulfillment",
+      "order"
+    ]
+  },
+  "depends_on": [
+    "fulfillment.ship"
+  ],
+  "methods": [
+    {
+      "ref": "fulfillment.track",
+      "role": "define"
+    },
+    {
+      "ref": "order.get",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "shipped"
+    ],
+    "after": [
+      "tracked"
+    ]
+  },
+  "acceptance": [
+    "仅本人订单可查轨迹",
+    "节点有序"
+  ],
+  "errors": [
+    {
+      "code": "FORBIDDEN",
+      "next": "customer.login"
+    }
+  ],
   "docs": {
     "scenario": "features/fulfillment.track/SCENARIO.md",
-    "modules": ["modules/fulfillment/MODULE.md"]
+    "modules": [
+      "modules/fulfillment/MODULE.md"
+    ]
   },
-  "harness": { "status": "not_started", "verify": "docs:verify" }
+  "harness": {
+    "status": "passing",
+    "verify": "docs:verify"
+  }
 }

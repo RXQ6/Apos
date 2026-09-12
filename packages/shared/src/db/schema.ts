@@ -186,6 +186,36 @@ CREATE TABLE IF NOT EXISTS aftersale (
   updated_at INTEGER NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS sku_activity (
+  sku_id TEXT PRIMARY KEY,
+  price_cents INTEGER NOT NULL CHECK (price_cents >= 0),
+  created_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS coupon_template (
+  id TEXT PRIMARY KEY,
+  code TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  discount_cents INTEGER NOT NULL CHECK (discount_cents >= 0),
+  min_amount_cents INTEGER NOT NULL DEFAULT 0,
+  total_stock INTEGER NOT NULL DEFAULT 0,
+  received_count INTEGER NOT NULL DEFAULT 0,
+  per_user_limit INTEGER NOT NULL DEFAULT 1,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS coupon_instance (
+  id TEXT PRIMARY KEY,
+  template_id TEXT NOT NULL,
+  customer_id TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'unused',
+  order_id TEXT,
+  received_at INTEGER NOT NULL,
+  used_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_coupon_inst_customer ON coupon_instance(customer_id, status);
+
 CREATE INDEX IF NOT EXISTS idx_preoccupy_order ON preoccupy(order_id, status);
 CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id, status);
 CREATE INDEX IF NOT EXISTS idx_order_line_order ON order_line(order_id);

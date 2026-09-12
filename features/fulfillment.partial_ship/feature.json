@@ -41,7 +41,7 @@
     "scenario": "features/fulfillment.partial_ship/SCENARIO.md"
   },
   "harness": {
-    "status": "not_started",
+    "status": "passing",
     "verify": "docs:verify"
   }
 }

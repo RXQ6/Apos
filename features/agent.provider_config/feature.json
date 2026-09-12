@@ -47,7 +47,7 @@
     "spec": "docs/tech-stack.md"
   },
   "harness": {
-    "status": "not_started",
+    "status": "passing",
     "verify": "docs:verify"
   }
 }

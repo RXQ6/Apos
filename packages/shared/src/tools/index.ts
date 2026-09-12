@@ -7,30 +7,42 @@ import {
   cancelOrder,
   cartAdd,
   cartCheckoutReady,
+  cartMerge,
   cartUpdate,
+  catalogDetail,
   catalogSearch,
+  changeOrderAddress,
   chargePayment,
+  createCouponTemplate,
   createOrder,
   createPayment,
   createShipment,
   createSpu,
   DomainError,
+  getOrder,
   getStock,
+  listOrders,
   loginCustomer,
   markPaidAndDeduct,
   markReturnReceived,
   offShelfSpu,
   openAftersale,
   publishSpu,
+  quoteCheckout,
   receiveChannelCallback,
+  receiveCoupon,
   refundOnly,
   registerCustomer,
+  repayOrder,
   returnRefund,
   sandboxSettle,
   paymentTimeoutClose,
+  saveAddress,
+  setSkuActivityPrice,
   shipShipment,
   signShipment,
   sweepTimeoutOrders,
+  trackShipment,
   upsertSku,
   getOrCreateCart,
 } from "../domain/index.js";
@@ -381,6 +393,108 @@ export function createToolRegistry(opts: ToolRegistryOptions) {
         if (!db) return { ok: false, error: "db not attached" };
         const r = sweepTimeoutOrders(db);
         return { ok: true, output: JSON.stringify(r, null, 2) };
+      },
+    },
+    {
+      name: "pricing_quote",
+      description: 'Quote checkout. JSON: {items:[{skuId,qty}],memberLevel?,couponInstanceId?}',
+      writes: false,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        const items = (a.items as Array<{ skuId: string; qty: number }> | undefined) ?? [];
+        return {
+          ok: true,
+          output: JSON.stringify(
+            quoteCheckout(db, {
+              items,
+              memberLevel: a.memberLevel ? String(a.memberLevel) : undefined,
+              couponInstanceId: a.couponInstanceId
+                ? String(a.couponInstanceId)
+                : undefined,
+            }),
+            null,
+            2,
+          ),
+        };
+      },
+    },
+    {
+      name: "pricing_coupon_create",
+      description: 'Create coupon template. JSON: {code,title,discountCents,totalStock?}',
+      writes: true,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        return {
+          ok: true,
+          output: JSON.stringify(
+            createCouponTemplate(db, {
+              code: String(a.code ?? ""),
+              title: String(a.title ?? a.code ?? ""),
+              discountCents: Number(a.discountCents ?? 0),
+              totalStock: a.totalStock === undefined ? undefined : Number(a.totalStock),
+            }),
+            null,
+            2,
+          ),
+        };
+      },
+    },
+    {
+      name: "pricing_coupon_receive",
+      description: 'Receive coupon. JSON: {customerId,code}',
+      writes: true,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        return {
+          ok: true,
+          output: JSON.stringify(
+            receiveCoupon(db, {
+              customerId: String(a.customerId ?? ""),
+              code: String(a.code ?? ""),
+            }),
+            null,
+            2,
+          ),
+        };
+      },
+    },
+    {
+      name: "order_get",
+      description: 'Get order. JSON: {orderId}',
+      writes: false,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        return { ok: true, output: JSON.stringify(getOrder(db, String(a.orderId ?? "")), null, 2) };
+      },
+    },
+    {
+      name: "order_repay",
+      description: 'Repay pending order. JSON: {orderId}',
+      writes: true,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        return {
+          ok: true,
+          output: JSON.stringify(repayOrder(db, String(a.orderId ?? "")), null, 2),
+        };
+      },
+    },
+    {
+      name: "catalog_detail",
+      description: 'SPU detail. JSON: {spuId}',
+      writes: false,
+      run: (argText) => {
+        if (!db) return { ok: false, error: "db not attached" };
+        const a = parseJsonArgs(argText);
+        return {
+          ok: true,
+          output: JSON.stringify(catalogDetail(db, String(a.spuId ?? "")), null, 2),
+        };
       },
     },
     {

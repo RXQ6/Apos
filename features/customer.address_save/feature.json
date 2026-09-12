@@ -45,7 +45,7 @@
     "scenario": "features/customer.address_save/SCENARIO.md"
   },
   "harness": {
-    "status": "not_started",
+    "status": "passing",
     "verify": "docs:verify"
   }
 }

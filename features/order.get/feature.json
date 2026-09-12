@@ -6,32 +6,52 @@
   "domain": "order",
   "kind": "happy-path",
   "priority": "P0",
-  "actors": ["buyer", "admin"],
+  "actors": [
+    "buyer",
+    "admin"
+  ],
   "modules": {
     "primary": "order",
-    "involved": ["order", "customer"]
+    "involved": [
+      "order",
+      "customer"
+    ]
   },
-  "depends_on": ["order.create"],
+  "depends_on": [
+    "order.create"
+  ],
   "methods": [
-    { "ref": "order.get", "role": "define" }
+    {
+      "ref": "order.get",
+      "role": "define"
+    }
   ],
   "states": {
-    "before": ["order_exists"],
-    "after": ["order_viewed"]
+    "before": [
+      "order_exists"
+    ],
+    "after": [
+      "order_viewed"
+    ]
   },
   "acceptance": [
     "仅本人或授权角色可读",
     "金额为快照值"
   ],
   "errors": [
-    { "code": "FORBIDDEN", "next": "customer.login" }
+    {
+      "code": "FORBIDDEN",
+      "next": "customer.login"
+    }
   ],
   "docs": {
     "scenario": "features/order.get/SCENARIO.md",
-    "modules": ["modules/order/MODULE.md"]
+    "modules": [
+      "modules/order/MODULE.md"
+    ]
   },
   "harness": {
-    "status": "not_started",
+    "status": "passing",
     "verify": "docs:verify"
   }
 }

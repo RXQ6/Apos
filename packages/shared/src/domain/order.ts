@@ -1,6 +1,7 @@
 import type { AposDb } from "../db/sqlite.js";
 import { DomainError, now, requireTx } from "./errors.js";
 import { ensureOnShelf } from "./inventory.js";
+import { markCouponUsed, quoteCheckout, type QuoteResult } from "./pricing.js";
 
 export interface OrderLineInput {
   skuId: string;
@@ -19,31 +20,41 @@ function newId(prefix: string): string {
   return `${prefix}_${now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/** pricing.quote stub: unit price only (no coupon). */
+/** pricing.quote: activity > member > coupon; used by order.create. */
 export function quoteLines(
   db: AposDb,
   items: OrderLineInput[],
+  opts?: { memberLevel?: string; couponInstanceId?: string },
 ): {
   lines: Array<{ skuId: string; qty: number; priceCents: number; title: string }>;
   payAmountCents: number;
-  snapshot: unknown;
+  snapshot: QuoteResult["snapshot"] & { quote: Omit<QuoteResult, "snapshot"> };
 } {
-  if (items.length === 0) throw new DomainError("CART_EMPTY", "no items");
-  const lines = items.map((item) => {
-    if (item.qty <= 0) throw new DomainError("QTY_INVALID", "qty must > 0");
-    const sku = ensureOnShelf(db, item.skuId);
-    return {
-      skuId: sku.id,
-      qty: item.qty,
-      priceCents: sku.priceCents,
-      title: sku.title,
-    };
+  const q = quoteCheckout(db, {
+    items,
+    memberLevel: opts?.memberLevel,
+    couponInstanceId: opts?.couponInstanceId,
   });
-  const payAmountCents = lines.reduce((s, l) => s + l.priceCents * l.qty, 0);
   return {
-    lines,
-    payAmountCents,
-    snapshot: { currency: "CNY", rule: "unit_price_only", capturedAt: now() },
+    lines: q.lines.map((l) => ({
+      skuId: l.skuId,
+      qty: l.qty,
+      priceCents: l.unitPriceCents,
+      title: l.title,
+    })),
+    payAmountCents: q.payAmountCents,
+    snapshot: {
+      ...q.snapshot,
+      quote: {
+        lines: q.lines,
+        listAmountCents: q.listAmountCents,
+        memberDiscountCents: q.memberDiscountCents,
+        couponDiscountCents: q.couponDiscountCents,
+        activitySavedCents: q.activitySavedCents,
+        payAmountCents: q.payAmountCents,
+        couponInstanceId: q.couponInstanceId,
+      },
+    },
   };
 }
 
@@ -118,11 +129,16 @@ export function createOrder(
     items: OrderLineInput[];
     address?: unknown;
     ttlMs?: number;
+    memberLevel?: string;
+    couponInstanceId?: string;
   },
 ): Order {
   return requireTx(db, () => {
     const orderId = newId("ord");
-    const quote = quoteLines(db, input.items);
+    const quote = quoteLines(db, input.items, {
+      memberLevel: input.memberLevel,
+      couponInstanceId: input.couponInstanceId,
+    });
     const ttl = input.ttlMs ?? 15 * 60 * 1000;
     preoccupyInTx(db, orderId, input.items, ttl);
 
@@ -153,6 +169,9 @@ export function createOrder(
         line.priceCents,
         line.title,
       );
+    }
+    if (input.couponInstanceId) {
+      markCouponUsed(db, input.couponInstanceId, orderId);
     }
     return {
       id: orderId,
@@ -249,4 +268,37 @@ export function listOrders(db: AposDb, customerId: string): Order[] {
     .prepare(`SELECT id FROM orders WHERE customer_id = ? ORDER BY created_at DESC`)
     .all(customerId) as Array<{ id: string }>;
   return rows.map((r) => getOrder(db, r.id));
+}
+
+/** order.address_change: only pending_payment. */
+export function changeOrderAddress(
+  db: AposDb,
+  orderId: string,
+  address: unknown,
+): Order {
+  return requireTx(db, () => {
+    const order = getOrder(db, orderId);
+    if (order.status !== "pending_payment") {
+      throw new DomainError("ORDER_NOT_PAYABLE", `cannot change address in ${order.status}`);
+    }
+    if (!address) throw new DomainError("ADDRESS_INVALID", "address required");
+    db.prepare(`UPDATE orders SET address_json = ?, updated_at = ? WHERE id = ?`).run(
+      JSON.stringify(address),
+      now(),
+      orderId,
+    );
+    return getOrder(db, orderId);
+  });
+}
+
+export function getOrderAddress(db: AposDb, orderId: string): unknown {
+  const row = db
+    .prepare(`SELECT address_json FROM orders WHERE id = ?`)
+    .get(orderId) as { address_json: string | null } | undefined;
+  if (!row?.address_json) return null;
+  try {
+    return JSON.parse(row.address_json);
+  } catch {
+    return null;
+  }
 }

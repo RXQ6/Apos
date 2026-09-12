@@ -6,35 +6,64 @@
   "domain": "catalog",
   "kind": "happy-path",
   "priority": "P0",
-  "actors": ["buyer"],
+  "actors": [
+    "buyer"
+  ],
   "modules": {
     "primary": "catalog",
-    "involved": ["catalog", "inventory", "pricing"]
+    "involved": [
+      "catalog",
+      "inventory",
+      "pricing"
+    ]
   },
-  "depends_on": ["catalog.publish"],
+  "depends_on": [
+    "catalog.publish"
+  ],
   "methods": [
-    { "ref": "catalog.detail", "role": "define" },
-    { "ref": "catalog.get", "role": "call" },
-    { "ref": "inventory.get", "role": "call" },
-    { "ref": "pricing.quote", "role": "call" }
+    {
+      "ref": "catalog.detail",
+      "role": "define"
+    },
+    {
+      "ref": "catalog.get",
+      "role": "call"
+    },
+    {
+      "ref": "inventory.get",
+      "role": "call"
+    },
+    {
+      "ref": "pricing.quote",
+      "role": "call"
+    }
   ],
   "states": {
-    "before": ["search_or_link"],
-    "after": ["detail_viewed"]
+    "before": [
+      "search_or_link"
+    ],
+    "after": [
+      "detail_viewed"
+    ]
   },
   "acceptance": [
     "可选 SKU 与价格可见",
     "可售提示非承诺锁库"
   ],
   "errors": [
-    { "code": "ITEM_OFF_SHELF", "next": "catalog.search" }
+    {
+      "code": "ITEM_OFF_SHELF",
+      "next": "catalog.search"
+    }
   ],
   "docs": {
     "scenario": "features/catalog.detail/SCENARIO.md",
-    "modules": ["modules/catalog/MODULE.md"]
+    "modules": [
+      "modules/catalog/MODULE.md"
+    ]
   },
   "harness": {
-    "status": "not_started",
+    "status": "passing",
     "verify": "docs:verify"
   }
 }

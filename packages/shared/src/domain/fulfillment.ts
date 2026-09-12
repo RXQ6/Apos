@@ -82,12 +82,23 @@ export function signShipment(db: AposDb, shipmentId: string): {
         shipmentId,
       );
     }
+    const shipped = db
+      .prepare(
+        `SELECT COALESCE(SUM(sl.qty),0) AS shipped_qty FROM shipment_line sl
+         JOIN order_line ol ON ol.id = sl.order_line_id
+         JOIN shipment s ON s.id = sl.shipment_id
+         WHERE ol.order_id = ? AND s.status IN ('shipped','signed')`,
+      )
+      .get(row.order_id) as { shipped_qty: number };
+    const ordered = db
+      .prepare(`SELECT COALESCE(SUM(qty),0) AS q FROM order_line WHERE order_id = ?`)
+      .get(row.order_id) as { q: number };
     const open = db
       .prepare(
-        `SELECT COUNT(*) AS n FROM shipment WHERE order_id = ? AND status != 'signed'`,
+        `SELECT COUNT(*) AS n FROM shipment WHERE order_id = ? AND status NOT IN ('signed')`,
       )
       .get(row.order_id) as { n: number };
-    if (open.n === 0) {
+    if (open.n === 0 && shipped.shipped_qty >= ordered.q) {
       db.prepare(
         `UPDATE orders SET status = 'completed', updated_at = ? WHERE id = ? AND status IN ('paid','fulfilling')`,
       ).run(now(), row.order_id);

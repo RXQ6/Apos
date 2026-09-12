@@ -6,19 +6,55 @@
   "domain": "pricing",
   "kind": "happy-path",
   "priority": "P1",
-  "actors": ["buyer"],
-  "modules": { "primary": "pricing", "involved": ["pricing", "customer"] },
-  "depends_on": ["customer.login"],
-  "methods": [
-    { "ref": "pricing.coupon_receive", "role": "define" },
-    { "ref": "customer.get", "role": "call" }
+  "actors": [
+    "buyer"
   ],
-  "states": { "before": ["logged_in"], "after": ["coupon_in_wallet"] },
-  "acceptance": ["库存不足拒绝", "重复领取策略可配"],
-  "errors": [{ "code": "COUPON_SOLD_OUT", "next": "pricing.coupon_apply" }],
+  "modules": {
+    "primary": "pricing",
+    "involved": [
+      "pricing",
+      "customer"
+    ]
+  },
+  "depends_on": [
+    "customer.login"
+  ],
+  "methods": [
+    {
+      "ref": "pricing.coupon_receive",
+      "role": "define"
+    },
+    {
+      "ref": "customer.get",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "logged_in"
+    ],
+    "after": [
+      "coupon_in_wallet"
+    ]
+  },
+  "acceptance": [
+    "库存不足拒绝",
+    "重复领取策略可配"
+  ],
+  "errors": [
+    {
+      "code": "COUPON_SOLD_OUT",
+      "next": "pricing.coupon_apply"
+    }
+  ],
   "docs": {
     "scenario": "features/pricing.coupon_receive/SCENARIO.md",
-    "modules": ["modules/pricing/MODULE.md"]
+    "modules": [
+      "modules/pricing/MODULE.md"
+    ]
   },
-  "harness": { "status": "not_started", "verify": "docs:verify" }
+  "harness": {
+    "status": "passing",
+    "verify": "docs:verify"
+  }
 }

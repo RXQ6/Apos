@@ -217,3 +217,28 @@ export function createRefund(
   emit("payment.refunded", { refundId: id, aftersaleId: input.aftersaleId });
   return { refundId: id, status: "success" };
 }
+
+/** order.repay: reuse open payment or create+charge for pending order. */
+export function repayOrder(
+  db: AposDb,
+  orderId: string,
+  channel = "sandbox",
+): {
+  paymentId: string;
+  status: string;
+  channelPayload: unknown;
+  amountCents: number;
+} {
+  const order = getOrder(db, orderId);
+  if (order.status !== "pending_payment") {
+    throw new DomainError("ORDER_NOT_PAYABLE", order.status);
+  }
+  const pay = createPayment(db, orderId, channel);
+  const charged = chargePayment(db, pay.paymentId, channel);
+  return {
+    paymentId: pay.paymentId,
+    status: charged.status,
+    channelPayload: charged.channelPayload,
+    amountCents: pay.amountCents,
+  };
+}

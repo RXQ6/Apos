@@ -6,19 +6,59 @@
   "domain": "aftersale",
   "kind": "happy-path",
   "priority": "P0",
-  "actors": ["admin", "system"],
-  "modules": { "primary": "aftersale", "involved": ["aftersale", "order"] },
-  "depends_on": ["aftersale.refund_only", "aftersale.return_refund"],
-  "methods": [
-    { "ref": "aftersale.approve", "role": "define" },
-    { "ref": "aftersale.open", "role": "call" }
+  "actors": [
+    "admin",
+    "system"
   ],
-  "states": { "before": ["opened"], "after": ["approved", "rejected"] },
-  "acceptance": ["状态迁移合法", "拒绝需原因", "重复审核幂等"],
-  "errors": [{ "code": "AFTERSALE_STATE_INVALID", "next": "order.get" }],
+  "modules": {
+    "primary": "aftersale",
+    "involved": [
+      "aftersale",
+      "order"
+    ]
+  },
+  "depends_on": [
+    "aftersale.refund_only",
+    "aftersale.return_refund"
+  ],
+  "methods": [
+    {
+      "ref": "aftersale.approve",
+      "role": "define"
+    },
+    {
+      "ref": "aftersale.open",
+      "role": "call"
+    }
+  ],
+  "states": {
+    "before": [
+      "opened"
+    ],
+    "after": [
+      "approved",
+      "rejected"
+    ]
+  },
+  "acceptance": [
+    "状态迁移合法",
+    "拒绝需原因",
+    "重复审核幂等"
+  ],
+  "errors": [
+    {
+      "code": "AFTERSALE_STATE_INVALID",
+      "next": "order.get"
+    }
+  ],
   "docs": {
     "scenario": "features/aftersale.approve/SCENARIO.md",
-    "modules": ["modules/aftersale/MODULE.md"]
+    "modules": [
+      "modules/aftersale/MODULE.md"
+    ]
   },
-  "harness": { "status": "not_started", "verify": "docs:verify" }
+  "harness": {
+    "status": "passing",
+    "verify": "docs:verify"
+  }
 }
