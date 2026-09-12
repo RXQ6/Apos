@@ -9,7 +9,8 @@
 | 全场景 40/40 passing | verify PASS | feature-list |
 | **Electron 内嵌小店** | esbuild + IPC open-shop | apps/electron main |
 | **支付渠道适配层** | vitest channels 4 | payment-channels.ts |
-| **前台地址/券/物流** | 单页 UI | apps/shop/public |
+| **前台完整精美 UI** | SPA 全链路 | apps/shop/public/index.html |
+| **Electron 工作台视觉对齐** | 玉色深墨主题 | styles.css |
 | **安装包脚本 + README** | electron-builder.yml | `npm.cmd run dist:electron` |
 
 ## 进行中

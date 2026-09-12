@@ -303,10 +303,20 @@ export function createShopApp(db: AposDb, opts?: { publicDir?: string }): Hono<E
         skuIds = items.map((i) => i.skuId);
         cartId = cart.id;
       }
+      let memberLevel: string | undefined;
+      try {
+        memberLevel = resolveCustomer(db, bearer(c) ?? "").memberLevel;
+      } catch {
+        memberLevel = undefined;
+      }
       const order = createOrder(db, {
         customerId,
         items,
         address: body.address,
+        memberLevel,
+        couponInstanceId: body.couponInstanceId
+          ? String(body.couponInstanceId)
+          : undefined,
       });
       if (cartId && skuIds.length) cartClearChecked(db, cartId, skuIds);
       return c.json(order, 201);
